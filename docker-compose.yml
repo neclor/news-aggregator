@@ -6,9 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     container_name: news-aggregator-backend
-    environment:
-      - TG_API_ID=${TG_API_ID}
-      - TG_API_HASH=${TG_API_HASH}
+    env_file: configs/.env
     ports:
       - "5300:8000"
     volumes:
@@ -29,10 +27,8 @@ services:
       context: .
       dockerfile: Dockerfile.bot
     container_name: news-aggregator-bot
+    env_file: configs/.env
     environment:
-      - TG_API_ID=${TG_API_ID}
-      - TG_API_HASH=${TG_API_HASH}
-      - TG_BOT_TOKEN=${TG_BOT_TOKEN}
       - API_BASE=http://backend:8000
     volumes:
       - ./data:/app/data
