@@ -10,4 +10,4 @@ npm install
 npm run build
 cd ../..
 
-sudo docker-compose up -d --build
+sudo docker compose up -d --build
