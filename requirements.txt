@@ -1,0 +1,8 @@
+telethon
+feedparser
+httpx
+parsel
+aiosqlite
+python-dotenv
+fastapi
+uvicorn
