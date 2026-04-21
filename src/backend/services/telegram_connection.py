@@ -54,16 +54,13 @@ class TelegramConnection:
     async def _connect(self) -> None:
         while True:
             try:
-                await self._client.connect()
-                if not await self._client.is_user_authorized():
-                    raise RuntimeError("Telegram session is not authorized. Run auth locally and copy the session file.")
-                logger.info("Telegram connected")
-                self._connected.set()
-                await self._client.disconnected
-                logger.warning("Telegram connection lost, reconnecting in %ds", app_config.TG_RECONNECT_DELAY)
+                async with self._client:
+                    logger.info("Telegram connected")
+                    self._connected.set()
+                    await self._client.disconnected
+                    logger.warning("Telegram connection lost, reconnecting in %ds", app_config.TG_RECONNECT_DELAY)
             except Exception:
                 logger.exception("Telegram connection error, retrying in %ds", app_config.TG_RECONNECT_DELAY)
             finally:
                 self._connected.clear()
-                await self._client.disconnect()
             await asyncio.sleep(app_config.TG_RECONNECT_DELAY)

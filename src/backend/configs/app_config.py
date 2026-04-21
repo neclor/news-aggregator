@@ -13,7 +13,7 @@ DB_PATH: Path = _DATA_DIR / "news.db"
 FETCH_INTERVAL_SEC: int = 600
 
 
-TG_SESSION_PATH: Path = _DATA_DIR / "tg_session"
+TG_SESSION_PATH: Path = _DATA_DIR / "backend_user_session"
 TG_API_ID: int = int(os.environ.get("TG_API_ID", "0"))
 TG_API_HASH: str = os.environ.get("TG_API_HASH", "")
 
