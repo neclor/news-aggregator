@@ -39,17 +39,32 @@ CREATE TABLE feed_items (
     PRIMARY KEY (feed_id, news_url)
 );
 
-CREATE INDEX idx_news_items_source      ON news_items(source);
-CREATE INDEX idx_news_items_published   ON news_items(published_at DESC);
-CREATE INDEX idx_feed_items_unread      ON feed_items(feed_id, is_read) WHERE is_read = 0;
-CREATE INDEX idx_feed_items_news_url    ON feed_items(news_url);
-CREATE INDEX idx_feed_sources_source    ON feed_sources(source_url);
-
 CREATE VIRTUAL TABLE news_fts USING fts5(
     url   UNINDEXED,
     title,
     text
 );
 
-INSERT INTO news_fts(url, title, text)
-SELECT url, title, text FROM news_items;
+CREATE TRIGGER IF NOT EXISTS news_items_ai AFTER INSERT ON news_items
+BEGIN
+    INSERT INTO news_fts(url, title, text) VALUES (new.url, new.title, new.text);
+END;
+
+CREATE TRIGGER IF NOT EXISTS news_items_ad AFTER DELETE ON news_items
+BEGIN
+    INSERT INTO news_fts(news_fts, url, title, text)
+    VALUES('delete', old.url, old.title, old.text);
+END;
+
+CREATE TRIGGER IF NOT EXISTS news_items_au AFTER UPDATE ON news_items
+BEGIN
+    INSERT INTO news_fts(news_fts, url, title, text)
+    VALUES('delete', old.url, old.title, old.text);
+    INSERT INTO news_fts(url, title, text)
+    VALUES (new.url, new.title, new.text);
+END;
+
+CREATE INDEX idx_news_items_source      ON news_items(source);
+CREATE INDEX idx_news_items_published   ON news_items(published_at DESC);
+CREATE INDEX idx_feed_items_unread      ON feed_items(feed_id, is_read) WHERE is_read = 0;
+CREATE INDEX idx_feed_sources_source    ON feed_sources(source_url);

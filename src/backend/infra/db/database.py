@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import aiosqlite
+import sqlparse
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ async def _migrate(db: aiosqlite.Connection) -> None:
         row = await cur.fetchone()
         current: int = row[0] if row else 0
 
-    migrations: list = sorted(
+    migrations: list[Path] = sorted(
         (p for p in _MIGRATIONS_DIR.glob("*.sql") if _version(p) > current),
         key=_version,
     )
@@ -42,11 +43,15 @@ async def _migrate(db: aiosqlite.Connection) -> None:
     for path in migrations:
         version = _version(path)
         logger.info("Applying migration %03d: %s", version, path.name)
-        sql = path.read_text(encoding="utf-8")
-        for statement in sql.split(";"):
-            statement = statement.strip()
-            if statement:
-                await db.execute(statement)
+
+        sql_content = path.read_text(encoding="utf-8")
+        statements = sqlparse.split(sql_content)
+
+        for statement in statements:
+            clean_statement = statement.strip()
+            if clean_statement:
+                await db.execute(clean_statement)
+
         await db.execute(
             "INSERT INTO schema_version (version, applied_at) VALUES (?, ?)",
             (version, datetime.now(timezone.utc).isoformat()),
@@ -56,4 +61,7 @@ async def _migrate(db: aiosqlite.Connection) -> None:
 
 
 def _version(path: Path) -> int:
-    return int(path.stem.split("_")[0])
+    try:
+        return int(path.stem.split("_")[0])
+    except (ValueError, IndexError):
+        return 0
