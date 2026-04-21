@@ -33,6 +33,7 @@ export default function Sidebar({ feeds, view, dark, onSelectFeed, onNewFeed, on
   }
 
   return (
+    <>
     <aside className="sidebar">
       <div className="sidebar-brand">News Aggregator</div>
 
@@ -79,5 +80,6 @@ export default function Sidebar({ feeds, view, dark, onSelectFeed, onNewFeed, on
     <button className="theme-btn-fixed" onClick={onToggleTheme} title={dark ? 'Light mode' : 'Dark mode'}>
       {dark ? '○' : '●'}
     </button>
+    </>
   )
 }
