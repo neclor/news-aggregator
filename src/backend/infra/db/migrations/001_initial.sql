@@ -44,3 +44,12 @@ CREATE INDEX idx_news_items_published   ON news_items(published_at DESC);
 CREATE INDEX idx_feed_items_unread      ON feed_items(feed_id, is_read) WHERE is_read = 0;
 CREATE INDEX idx_feed_items_news_url    ON feed_items(news_url);
 CREATE INDEX idx_feed_sources_source    ON feed_sources(source_url);
+
+CREATE VIRTUAL TABLE news_fts USING fts5(
+    url   UNINDEXED,
+    title,
+    text
+);
+
+INSERT INTO news_fts(url, title, text)
+SELECT url, title, text FROM news_items;
