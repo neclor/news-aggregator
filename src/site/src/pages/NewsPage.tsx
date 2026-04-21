@@ -108,7 +108,9 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
         <div className="page-header-info">
           <h2 className="page-title">{feed.name}</h2>
           {feed.keywords.length > 0 && (
-            <p className="page-subtitle">{feed.keywords.join(' · ')}</p>
+            <p className="page-subtitle" title={feed.keywords.join(', ')} style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', maxWidth: '60ch' }}>
+              {feed.keywords.join(' · ')}
+            </p>
           )}
         </div>
         <div className="page-actions">
