@@ -32,6 +32,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
   const [editing, setEditing] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [showSettings, setShowSettings] = useState(false)
+
   const [statsKey, setStatsKey] = useState(0)
 
   const load = useCallback(async () => {
@@ -156,15 +157,6 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
           <button className="btn btn-ghost btn-sm" onClick={refresh} disabled={fetching}>
             {fetching ? '…' : '↻'}
           </button>
-          <div className="feed-settings-wrap">
-            <button className="btn btn-ghost btn-sm" onClick={() => setShowSettings(s => !s)}>⋯</button>
-            {showSettings && (
-              <div className="feed-settings-menu">
-                <button onClick={() => { setFormError(null); setEditing(true); setShowSettings(false) }}>Edit</button>
-                <button className="danger" onClick={handleDelete}>Delete</button>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -223,6 +215,16 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
           </div>
         </div>
         <StatsPanel feedId={feed.id} refreshKey={statsKey} />
+      </div>
+
+      <div className="feed-settings-fixed">
+        <button className="feed-settings-fab" onClick={() => setShowSettings(s => !s)}>⋯</button>
+        {showSettings && (
+          <div className="feed-settings-menu feed-settings-menu--up">
+            <button onClick={() => { setFormError(null); setEditing(true); setShowSettings(false) }}>Edit</button>
+            <button className="danger" onClick={handleDelete}>Delete</button>
+          </div>
+        )}
       </div>
 
       {editing && (

@@ -167,7 +167,7 @@ body {
 
 /* ── Page ────────────────────────────────── */
 
-.page { max-width: 1100px; }
+.page { width: 100%; }
 
 .page-header {
   display: flex;
@@ -320,13 +320,49 @@ body {
 }
 .news-mark-unread:hover { opacity: 1; color: var(--text); }
 
-.feed-settings-wrap { position: relative; }
+.theme-btn-fixed {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 200;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.theme-btn-fixed:hover { color: var(--text); }
+
+.feed-settings-fixed {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 200;
+}
+
+.feed-settings-fab {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.feed-settings-fab:hover { color: var(--text); }
 
 .feed-settings-menu {
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  background: var(--surface);
+  background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0,0,0,.15);
@@ -334,6 +370,10 @@ body {
   flex-direction: column;
   min-width: 120px;
   z-index: 100;
+}
+.feed-settings-menu--up {
+  top: auto;
+  bottom: calc(100% + 4px);
 }
 .feed-settings-menu button {
   background: none;
@@ -344,7 +384,7 @@ body {
   font-size: 14px;
   color: var(--text);
 }
-.feed-settings-menu button:hover { background: var(--hover); }
+.feed-settings-menu button:hover { background: var(--border); }
 .feed-settings-menu button.danger { color: var(--danger, #e53e3e); }
 
 /* ── Sources ─────────────────────────────── */

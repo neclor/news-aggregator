@@ -74,11 +74,10 @@ export default function Sidebar({ feeds, view, dark, onSelectFeed, onNewFeed, on
           <span className="sidebar-nav-icon">⊕</span>
           Sources
         </button>
-        <button className="sidebar-nav-item sidebar-theme-btn" onClick={onToggleTheme}>
-          <span className="sidebar-nav-icon">{dark ? '○' : '●'}</span>
-          {dark ? 'Light' : 'Dark'}
-        </button>
       </div>
     </aside>
+    <button className="theme-btn-fixed" onClick={onToggleTheme} title={dark ? 'Light mode' : 'Dark mode'}>
+      {dark ? '○' : '●'}
+    </button>
   )
 }
