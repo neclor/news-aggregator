@@ -100,12 +100,12 @@ class NewsService:
         return await self._news_repo.get_stats(feed_id)
 
 
-    async def get_news(self, feed_id: UUID, *, unread_only: bool = False, all_time: bool = False, limit: int = 100) -> list[NewsItem]:
+    async def get_news(self, feed_id: UUID, *, unread_only: bool = False, all_time: bool = False, limit: int = 100, q: str | None = None) -> list[NewsItem]:
         feed = await self._feed_repo.get(feed_id)
         keywords = feed.keywords if feed else None
         not_before = (datetime.now(timezone.utc) - feed.max_age) if (feed and feed.max_age and not all_time) else None
         return await self._news_repo.get_by_feed(
-            feed_id, keywords=keywords, not_before=not_before, unread_only=unread_only, limit=limit
+            feed_id, keywords=keywords, not_before=not_before, unread_only=unread_only, limit=limit, q=q
         )
 
 

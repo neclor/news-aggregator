@@ -33,8 +33,11 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
   const [formError, setFormError] = useState<string | null>(null)
   const [showSettings, setShowSettings] = useState(false)
   const [statsKey, setStatsKey] = useState(0)
+  const [searchInput, setSearchInput] = useState('')
+  const [q, setQ] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  // Close dropdown on outside click
   useEffect(() => {
     if (!showSettings) return
     const handler = (e: MouseEvent) => {
@@ -45,11 +48,23 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     return () => document.removeEventListener('mousedown', handler)
   }, [showSettings])
 
+  // Reset search when switching feeds
+  useEffect(() => {
+    setSearchInput('')
+    setQ('')
+  }, [feed.id])
+
+  // Debounce search input → q
+  useEffect(() => {
+    const timer = setTimeout(() => setQ(searchInput.trim()), 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const loaded = await api.news.list(feed.id, unreadOnly, allTime, allTime ? 1000 : 200)
+      const loaded = await api.news.list(feed.id, unreadOnly, allTime, allTime ? 1000 : 200, q || undefined)
       setItems(loaded)
       setRead(new Set(loaded.filter(i => i.is_read).map(i => i.url)))
     } catch (e) {
@@ -57,7 +72,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     } finally {
       setLoading(false)
     }
-  }, [feed.id, unreadOnly, allTime])
+  }, [feed.id, unreadOnly, allTime, q])
 
   useEffect(() => { load() }, [load])
 
@@ -118,8 +133,14 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     }
   }
 
+  const clearSearch = () => { setSearchInput(''); setQ('') }
+
   const visible = unreadOnly ? items.filter(i => !read.has(i.url)) : items
   const allRead = items.length > 0 && items.every(i => read.has(i.url))
+
+  const emptyMessage = q
+    ? `No results for "${q}".`
+    : unreadOnly ? 'No unread items.' : 'No news yet — sources will be fetched soon.'
 
   return (
     <div className="page">
@@ -164,12 +185,24 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
             </div>
           </div>
 
+          <div className="search-bar">
+            <span className="search-icon">⌕</span>
+            <input
+              className="search-input"
+              type="text"
+              placeholder="Search…"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+            />
+            {searchInput && (
+              <button className="search-clear" onClick={clearSearch}>✕</button>
+            )}
+          </div>
+
           {error && <div className="alert alert-error">{error}</div>}
           {loading && <div className="loading">Loading…</div>}
           {!loading && visible.length === 0 && !error && (
-            <div className="empty-state">
-              {unreadOnly ? 'No unread items.' : 'No news yet — sources will be fetched soon.'}
-            </div>
+            <div className="empty-state">{emptyMessage}</div>
           )}
 
           <div className="news-feed">

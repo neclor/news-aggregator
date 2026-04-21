@@ -23,6 +23,11 @@ class NewsRepository:
             (item.url, item.source, item.title, item.text, item.published_at.isoformat(), fetched_at, item.author),
         ) as cursor:
             inserted = cursor.rowcount > 0
+        if inserted:
+            await self._db.execute(
+                "INSERT INTO news_fts(url, title, text) VALUES (?, ?, ?)",
+                (item.url, item.title, item.text),
+            )
         await self._db.commit()
         return inserted
 
@@ -35,7 +40,7 @@ class NewsRepository:
         await self._db.commit()
 
 
-    async def get_by_feed(self, feed_id: UUID, *, keywords: list[str] | None = None, not_before: datetime | None = None, unread_only: bool = False, limit: int = 100) -> list[NewsItem]:
+    async def get_by_feed(self, feed_id: UUID, *, keywords: list[str] | None = None, not_before: datetime | None = None, unread_only: bool = False, limit: int = 100, q: str | None = None) -> list[NewsItem]:
         query = """
             SELECT news_items.*, feed_items.is_read FROM news_items
             JOIN feed_items ON feed_items.news_url = news_items.url
@@ -47,6 +52,11 @@ class NewsRepository:
             params.append(not_before.isoformat())
         if unread_only:
             query += " AND feed_items.is_read = 0"
+        if q:
+            fts_q = _fts_query(q)
+            if fts_q:
+                query += " AND news_items.url IN (SELECT url FROM news_fts WHERE news_fts MATCH ?)"
+                params.append(fts_q)
         query += " ORDER BY news_items.published_at DESC"
 
         async with self._db.execute(query, params) as cursor:
@@ -135,6 +145,11 @@ class NewsRepository:
             daily = [DayCount(date=r["day"], count=r["cnt"]) for r in await cur.fetchall()]
 
         return FeedStats(total=total, read=read_count, unread=total - read_count, by_source=by_source, daily=daily)
+
+
+def _fts_query(q: str) -> str:
+    tokens = [t.replace('"', '') for t in q.split() if t.replace('"', '')]
+    return ' '.join(f'"{t}"' for t in tokens)
 
 
 def _row_to_item(row: aiosqlite.Row) -> NewsItem:

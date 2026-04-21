@@ -28,10 +28,11 @@ export const api = {
   },
 
   news: {
-    list: (feedId: string, unreadOnly: boolean, allTime: boolean, limit: number) => {
+    list: (feedId: string, unreadOnly: boolean, allTime: boolean, limit: number, q?: string) => {
       const params = new URLSearchParams({ limit: String(limit) })
       if (unreadOnly) params.set('unread_only', 'true')
       if (allTime) params.set('all_time', 'true')
+      if (q) params.set('q', q)
       return request<NewsItem[]>(`/feeds/${feedId}/news?${params}`)
     },
     markRead: (feedId: string, newsUrl: string) =>

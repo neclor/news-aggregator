@@ -19,10 +19,11 @@ async def get_news(
     unread_only: bool = False,
     all_time: bool = False,
     limit: int = Query(default=100, ge=1, le=1000),
+    q: str | None = Query(default=None, max_length=200),
 ) -> list[NewsItemOut]:
     if not await service.get_feed(feed_id):
         raise HTTPException(status_code=404)
-    items = await service.get_news(feed_id, unread_only=unread_only, all_time=all_time, limit=limit)
+    items = await service.get_news(feed_id, unread_only=unread_only, all_time=all_time, limit=limit, q=q or None)
     return [_to_out(i) for i in items]
 
 
