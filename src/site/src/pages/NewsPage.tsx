@@ -32,7 +32,6 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
   const [editing, setEditing] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [showSettings, setShowSettings] = useState(false)
-
   const [statsKey, setStatsKey] = useState(0)
 
   const load = useCallback(async () => {
@@ -83,13 +82,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
 
   const refresh = async () => {
     setFetching(true)
-    try {
-      await api.fetch()
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setFetching(false)
-    }
+    try { await api.fetch() } catch (e) { console.error(e) } finally { setFetching(false) }
     await load()
   }
 
@@ -119,112 +112,98 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <div className="page-header-info">
-          <h2 className="page-title">{feed.name}</h2>
-          {feed.keywords.length > 0 && (
-            <p className="page-subtitle" title={feed.keywords.join(', ')} style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', maxWidth: '60ch' }}>
-              {feed.keywords.join(' · ')}
-            </p>
-          )}
-        </div>
-        <div className="page-actions">
-          <label className="toggle-label">
-            <input
-              type="checkbox"
-              checked={unreadOnly}
-              onChange={e => setUnreadOnly(e.target.checked)}
-            />
-            Unread only
-          </label>
-          {feed.max_age_hours && (
-            <label className="toggle-label">
-              <input
-                type="checkbox"
-                checked={allTime}
-                onChange={e => setAllTime(e.target.checked)}
-              />
-              All time
-            </label>
-          )}
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={markAllRead}
-            disabled={allRead || items.length === 0}
-          >
-            Mark all read
-          </button>
-          <button className="btn btn-ghost btn-sm" onClick={refresh} disabled={fetching}>
-            {fetching ? '…' : '↻'}
-          </button>
-        </div>
-      </div>
-
-      {error && <div className="alert alert-error">{error}</div>}
-      {loading && <div className="loading">Loading…</div>}
-
       <div className="page-body">
         <div className="news-feed-col">
+
+          <div className="page-header">
+            <div className="page-header-info">
+              <h2 className="page-title">{feed.name}</h2>
+              {feed.keywords.length > 0 && (
+                <p className="page-subtitle" title={feed.keywords.join(', ')}>
+                  {feed.keywords.join(' · ')}
+                </p>
+              )}
+            </div>
+            <div className="page-actions">
+              <label className="toggle-label">
+                <input type="checkbox" checked={unreadOnly} onChange={e => setUnreadOnly(e.target.checked)} />
+                Unread only
+              </label>
+              {feed.max_age_hours && (
+                <label className="toggle-label">
+                  <input type="checkbox" checked={allTime} onChange={e => setAllTime(e.target.checked)} />
+                  All time
+                </label>
+              )}
+              <button className="btn btn-secondary btn-sm" onClick={markAllRead} disabled={allRead || items.length === 0}>
+                Mark all read
+              </button>
+              <button className="btn btn-ghost btn-sm" onClick={refresh} disabled={fetching}>
+                {fetching ? '…' : '↻'}
+              </button>
+              <div className="dropdown">
+                <button className="btn btn-ghost btn-sm" onClick={() => setShowSettings(s => !s)}>⋯</button>
+                {showSettings && (
+                  <div className="dropdown-menu">
+                    <button onClick={() => { setFormError(null); setEditing(true); setShowSettings(false) }}>Edit</button>
+                    <button className="danger" onClick={handleDelete}>Delete</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {error && <div className="alert alert-error">{error}</div>}
+          {loading && <div className="loading">Loading…</div>}
           {!loading && visible.length === 0 && !error && (
             <div className="empty-state">
               {unreadOnly ? 'No unread items.' : 'No news yet — sources will be fetched soon.'}
             </div>
           )}
+
           <div className="news-feed">
             {visible.map(item => {
-          const isRead = read.has(item.url)
-          return (
-            <article key={item.url} className={`news-card${isRead ? ' news-card--read' : ''}`}>
-              <div className="news-card-meta">
-                <span className="news-source">{item.source}</span>
-                <span className="news-sep">·</span>
-                <span className="news-time">{timeAgo(item.published_at)}</span>
-                {item.author && (
-                  <>
+              const isRead = read.has(item.url)
+              return (
+                <article key={item.url} className={`news-card${isRead ? ' news-card--read' : ''}`}>
+                  <div className="news-card-meta">
+                    <span className="news-source">{item.source}</span>
                     <span className="news-sep">·</span>
-                    <span className="news-author">{item.author}</span>
-                  </>
-                )}
-              </div>
-
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="news-title"
-                onClick={() => { if (!isRead) markRead(item.url) }}
-              >
-                {item.title || item.url}
-              </a>
-
-              {item.text && (
-                <p className="news-excerpt">
-                  {item.text.length > 220 ? item.text.slice(0, 220) + '…' : item.text}
-                </p>
-              )}
-
-              <div className="news-card-actions">
-                {!isRead
-                  ? <button className="news-mark-read" onClick={() => markRead(item.url)}>Mark as read</button>
-                  : <button className="news-mark-unread" onClick={() => markUnread(item.url)}>Mark as unread</button>
-                }
-              </div>
-            </article>
-          )
-        })}
+                    <span className="news-time">{timeAgo(item.published_at)}</span>
+                    {item.author && (
+                      <>
+                        <span className="news-sep">·</span>
+                        <span className="news-author">{item.author}</span>
+                      </>
+                    )}
+                  </div>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="news-title"
+                    onClick={() => { if (!isRead) markRead(item.url) }}
+                  >
+                    {item.title || item.url}
+                  </a>
+                  {item.text && (
+                    <p className="news-excerpt">
+                      {item.text.length > 220 ? item.text.slice(0, 220) + '…' : item.text}
+                    </p>
+                  )}
+                  <div className="news-card-actions">
+                    {!isRead
+                      ? <button className="news-mark-read" onClick={() => markRead(item.url)}>Mark as read</button>
+                      : <button className="news-mark-unread" onClick={() => markUnread(item.url)}>Mark as unread</button>
+                    }
+                  </div>
+                </article>
+              )
+            })}
           </div>
+
         </div>
         <StatsPanel feedId={feed.id} refreshKey={statsKey} />
-      </div>
-
-      <div className="feed-settings-fixed">
-        <button className="feed-settings-fab" onClick={() => setShowSettings(s => !s)}>⋯</button>
-        {showSettings && (
-          <div className="feed-settings-menu feed-settings-menu--up">
-            <button onClick={() => { setFormError(null); setEditing(true); setShowSettings(false) }}>Edit</button>
-            <button className="danger" onClick={handleDelete}>Delete</button>
-          </div>
-        )}
       </div>
 
       {editing && (
