@@ -10,6 +10,7 @@ import SourcesPage from './pages/SourcesPage'
 type View = { kind: 'news'; feedId: string } | { kind: 'sources' }
 
 const ORDER_KEY = 'feed-order'
+const LAST_VIEW_KEY = 'last-view'
 
 function applyOrder(feeds: Feed[]): Feed[] {
   const ids: string[] = JSON.parse(localStorage.getItem(ORDER_KEY) ?? '[]')
@@ -22,7 +23,10 @@ function applyOrder(feeds: Feed[]): Feed[] {
 
 export default function App() {
   const [feeds, setFeeds] = useState<Feed[]>([])
-  const [view, setView] = useState<View | null>(null)
+  const [view, setView] = useState<View | null>(() => {
+    const saved = localStorage.getItem(LAST_VIEW_KEY)
+    return saved ? JSON.parse(saved) : null
+  })
   const [creating, setCreating] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [dark, setDark] = useState(() => {
@@ -34,6 +38,11 @@ export default function App() {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light'
     localStorage.setItem('theme', dark ? 'dark' : 'light')
   }, [dark])
+
+  useEffect(() => {
+    if (view) localStorage.setItem(LAST_VIEW_KEY, JSON.stringify(view))
+    else localStorage.removeItem(LAST_VIEW_KEY)
+  }, [view])
 
   const loadFeeds = useCallback(async () => {
     try {
