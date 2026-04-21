@@ -31,6 +31,10 @@ class NewsItemOut(BaseModel):
     is_read: bool
 
 
+class MarkReadIn(BaseModel):
+    url: str
+
+
 class SiteSelectorsIn(BaseModel):
     articles: str
     title: str

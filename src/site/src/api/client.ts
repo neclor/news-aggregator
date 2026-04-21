@@ -35,7 +35,7 @@ export const api = {
       return request<NewsItem[]>(`/feeds/${feedId}/news?${params}`)
     },
     markRead: (feedId: string, newsUrl: string) =>
-      request<void>(`/feeds/${feedId}/news/${encodeURIComponent(newsUrl)}/read`, { method: 'POST' }),
+      request<void>(`/feeds/${feedId}/news/mark-read`, { method: 'POST', body: body({ url: newsUrl }) }),
     markAllRead: (feedId: string) =>
       request<void>(`/feeds/${feedId}/news/read`, { method: 'POST' }),
   },

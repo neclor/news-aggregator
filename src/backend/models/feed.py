@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
@@ -26,7 +27,7 @@ class Feed:
         if not self.keywords:
             return True
         haystack = f"{item.title} {item.text}".lower()
-        return any(kw.lower() in haystack for kw in self.keywords)
+        return any(re.search(r'\b' + re.escape(kw.lower()) + r'\b', haystack) for kw in self.keywords)
 
     def within_max_age(self, published_at: datetime) -> bool:
         if self.max_age is None:

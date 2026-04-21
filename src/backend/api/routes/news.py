@@ -1,10 +1,9 @@
-from urllib.parse import unquote
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 
 from backend.api.deps import NewsServiceDep
-from backend.api.schemas import NewsItemOut
+from backend.api.schemas import MarkReadIn, NewsItemOut
 from backend.models.news_item import NewsItem
 from backend.utils.url_utils import normalize_url
 
@@ -33,11 +32,11 @@ async def mark_all_read(feed_id: UUID, service: NewsServiceDep) -> None:
     await service.mark_all_read(feed_id)
 
 
-@router.post("/{news_url:path}/read", status_code=204)
-async def mark_read(feed_id: UUID, news_url: str, service: NewsServiceDep) -> None:
+@router.post("/mark-read", status_code=204)
+async def mark_read(feed_id: UUID, body: MarkReadIn, service: NewsServiceDep) -> None:
     if not await service.get_feed(feed_id):
         raise HTTPException(status_code=404)
-    await service.mark_read(feed_id, normalize_url(unquote(news_url)))
+    await service.mark_read(feed_id, normalize_url(body.url))
 
 
 def _to_out(item: NewsItem) -> NewsItemOut:

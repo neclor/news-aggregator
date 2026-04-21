@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -54,7 +55,7 @@ class NewsRepository:
         if keywords:
             items = [
                 i for i in items
-                if any(kw.lower() in f"{i.title} {i.text}".lower() for kw in keywords)
+                if any(re.search(r'\b' + re.escape(kw.lower()) + r'\b', f"{i.title} {i.text}".lower()) for kw in keywords)
             ]
         return items[:limit]
 
