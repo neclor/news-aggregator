@@ -17,6 +17,7 @@ class TelegramConnection:
     def __init__(self, session: str, api_id: int, api_hash: str) -> None:
         self._client = TelegramClient(session, api_id, api_hash)
         self._task: asyncio.Task | None = None
+        self._connected = asyncio.Event()
 
 
     @property
@@ -35,6 +36,7 @@ class TelegramConnection:
 
 
     async def join_channel(self, url: str) -> None:
+        await self._connected.wait()
         entity = await self._client.get_entity(url)
         if not isinstance(entity, Channel):
             raise ValueError(f"Not a channel: {url}")
@@ -52,10 +54,16 @@ class TelegramConnection:
     async def _connect(self) -> None:
         while True:
             try:
-                async with self._client:
-                    logger.info("Telegram connected")
-                    await self._client.disconnected
-                    logger.warning("Telegram connection lost, reconnecting in %ds", app_config.TG_RECONNECT_DELAY)
+                await self._client.connect()
+                if not await self._client.is_user_authorized():
+                    raise RuntimeError("Telegram session is not authorized. Run auth locally and copy the session file.")
+                logger.info("Telegram connected")
+                self._connected.set()
+                await self._client.disconnected
+                logger.warning("Telegram connection lost, reconnecting in %ds", app_config.TG_RECONNECT_DELAY)
             except Exception:
                 logger.exception("Telegram connection error, retrying in %ds", app_config.TG_RECONNECT_DELAY)
+            finally:
+                self._connected.clear()
+                await self._client.disconnect()
             await asyncio.sleep(app_config.TG_RECONNECT_DELAY)
