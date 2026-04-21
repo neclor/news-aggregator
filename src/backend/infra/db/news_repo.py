@@ -23,11 +23,6 @@ class NewsRepository:
             (item.url, item.source, item.title, item.text, item.published_at.isoformat(), fetched_at, item.author),
         ) as cursor:
             inserted = cursor.rowcount > 0
-        if inserted:
-            await self._db.execute(
-                "INSERT INTO news_fts(url, title, text) VALUES (?, ?, ?)",
-                (item.url, item.title, item.text),
-            )
         await self._db.commit()
         return inserted
 
