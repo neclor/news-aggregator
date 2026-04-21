@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from backend.models.parser_type import ParserType
 
@@ -11,6 +11,11 @@ class FeedIn(BaseModel):
     sources: list[str] = []
     keywords: list[str] = []
     max_age_hours: float | None = Field(default=None, gt=0)
+
+    @field_validator('keywords', 'sources', mode='before')
+    @classmethod
+    def deduplicate(cls, v: list[str]) -> list[str]:
+        return list(dict.fromkeys(kw for kw in v if kw))
 
 
 class FeedOut(BaseModel):
