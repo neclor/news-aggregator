@@ -4,6 +4,7 @@ from uuid import UUID
 
 import aiosqlite
 
+from backend.models.feed_stats import DayCount, FeedStats, SourceCount
 from backend.models.news_item import NewsItem
 
 
@@ -94,7 +95,7 @@ class NewsRepository:
         await self._db.commit()
 
 
-    async def get_stats(self, feed_id: UUID) -> "FeedStats":
+    async def get_stats(self, feed_id: UUID) -> FeedStats:
         fid = str(feed_id)
 
         async with self._db.execute(
@@ -102,8 +103,8 @@ class NewsRepository:
             (fid,),
         ) as cur:
             row = await cur.fetchone()
-        total: int = row["total"] or 0
-        read_count: int = row["read_count"] or 0
+        total: int = (row["total"] or 0) if row else 0
+        read_count: int = (row["read_count"] or 0) if row else 0
 
         async with self._db.execute(
             """
@@ -117,7 +118,7 @@ class NewsRepository:
             """,
             (fid,),
         ) as cur:
-            by_source = [{"source": r["source"], "count": r["cnt"]} for r in await cur.fetchall()]
+            by_source = [SourceCount(source=r["source"], count=r["cnt"]) for r in await cur.fetchall()]
 
         async with self._db.execute(
             """
@@ -131,21 +132,9 @@ class NewsRepository:
             """,
             (fid,),
         ) as cur:
-            daily = [{"date": r["day"], "count": r["cnt"]} for r in await cur.fetchall()]
+            daily = [DayCount(date=r["day"], count=r["cnt"]) for r in await cur.fetchall()]
 
         return FeedStats(total=total, read=read_count, unread=total - read_count, by_source=by_source, daily=daily)
-
-
-from dataclasses import dataclass, field
-
-
-@dataclass
-class FeedStats:
-    total: int
-    read: int
-    unread: int
-    by_source: list[dict]
-    daily: list[dict]
 
 
 def _row_to_item(row: aiosqlite.Row) -> NewsItem:

@@ -36,7 +36,10 @@ class TelegramConnection:
 
 
     async def join_channel(self, url: str) -> None:
-        await self._connected.wait()
+        try:
+            await asyncio.wait_for(self._connected.wait(), timeout=30)
+        except asyncio.TimeoutError:
+            raise RuntimeError("Telegram is not connected")
         entity = await self._client.get_entity(url)
         if not isinstance(entity, Channel):
             raise ValueError(f"Not a channel: {url}")

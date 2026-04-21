@@ -9,7 +9,8 @@ from backend.models.source_config import SourceConfig
 from backend.models.feed import Feed
 from backend.models.news_item import NewsItem
 from backend.infra.db.feed_repo import FeedRepository
-from backend.infra.db.news_repo import FeedStats, NewsRepository
+from backend.infra.db.news_repo import NewsRepository
+from backend.models.feed_stats import FeedStats
 from backend.infra.db.source_repo import SourceRepository
 from backend.infra.aggregator.parsers.parser import Parser
 from backend.services.telegram_connection import TelegramConnection
@@ -40,6 +41,7 @@ class NewsService:
         await self._relink_feed(feed)
         logger.info("Feed saved: %s ('%s')", feed.id, feed.name)
 
+
     async def _auto_register_sources(self, urls: list[str]) -> None:
         existing = {s.url for s in await self._source_repo.get_all()}
         for url in urls:
@@ -49,9 +51,11 @@ class NewsService:
             await self.add_source(SourceConfig(url=url, type=inferred))
             logger.info("Auto-registered source: %s (%s)", url, inferred)
 
+
     async def _relink_feed(self, feed: Feed) -> None:
         items = await self._news_repo.get_by_sources(feed.sources)
         await self._feed_repo.set_news_items(feed.id, {item.url for item in items})
+
 
     async def remove_feed(self, feed_id: UUID) -> bool:
         return await self._feed_repo.delete(feed_id)
@@ -92,13 +96,13 @@ class NewsService:
         await self._news_repo.mark_unread(feed_id, news_url)
 
 
-    async def get_stats(self, feed_id: UUID) -> "FeedStats":
+    async def get_stats(self, feed_id: UUID) -> FeedStats:
         return await self._news_repo.get_stats(feed_id)
 
 
     async def get_news(self, feed_id: UUID, *, unread_only: bool = False, all_time: bool = False, limit: int = 100) -> list[NewsItem]:
         feed = await self._feed_repo.get(feed_id)
-        keywords = (feed.keywords or None) if feed else None
+        keywords = feed.keywords if feed else None
         not_before = (datetime.now(timezone.utc) - feed.max_age) if (feed and feed.max_age and not all_time) else None
         return await self._news_repo.get_by_feed(
             feed_id, keywords=keywords, not_before=not_before, unread_only=unread_only, limit=limit

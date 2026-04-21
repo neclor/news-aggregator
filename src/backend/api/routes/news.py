@@ -1,3 +1,4 @@
+import dataclasses
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
@@ -30,13 +31,7 @@ async def get_stats(feed_id: UUID, service: NewsServiceDep) -> FeedStatsOut:
     if not await service.get_feed(feed_id):
         raise HTTPException(status_code=404)
     stats = await service.get_stats(feed_id)
-    return FeedStatsOut(
-        total=stats.total,
-        read=stats.read,
-        unread=stats.unread,
-        by_source=[{"source": s["source"], "count": s["count"]} for s in stats.by_source],
-        daily=[{"date": d["date"], "count": d["count"]} for d in stats.daily],
-    )
+    return FeedStatsOut.model_validate(dataclasses.asdict(stats))
 
 
 @router.post("/read", status_code=204)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../api/client'
 import type { Feed, FeedIn, NewsItem } from '../api/types'
 import Modal from '../components/Modal'
@@ -33,6 +33,17 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
   const [formError, setFormError] = useState<string | null>(null)
   const [showSettings, setShowSettings] = useState(false)
   const [statsKey, setStatsKey] = useState(0)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showSettings) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
+        setShowSettings(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showSettings])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -141,7 +152,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
               <button className="btn btn-ghost btn-sm" onClick={refresh} disabled={fetching}>
                 {fetching ? '…' : '↻'}
               </button>
-              <div className="dropdown">
+              <div className="dropdown" ref={dropdownRef}>
                 <button className="btn btn-ghost btn-sm" onClick={() => setShowSettings(s => !s)}>⋯</button>
                 {showSettings && (
                   <div className="dropdown-menu">
