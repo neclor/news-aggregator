@@ -53,10 +53,8 @@ class NewsRepository:
 
         items = [_row_to_item(r) for r in rows]
         if keywords:
-            items = [
-                i for i in items
-                if any(re.search(r'\b' + re.escape(kw.lower()) + r'\b', f"{i.title} {i.text}".lower()) for kw in keywords)
-            ]
+            pattern = re.compile(r'\b(' + '|'.join(re.escape(kw.lower()) for kw in keywords) + r')\b')
+            items = [i for i in items if pattern.search(f"{i.title} {i.text}".lower())]
         return items[:limit]
 
 

@@ -26,8 +26,8 @@ class Feed:
             return False
         if not self.keywords:
             return True
-        haystack = f"{item.title} {item.text}".lower()
-        return any(re.search(r'\b' + re.escape(kw.lower()) + r'\b', haystack) for kw in self.keywords)
+        pattern = re.compile(r'\b(' + '|'.join(re.escape(kw.lower()) for kw in self.keywords) + r')\b')
+        return bool(pattern.search(f"{item.title} {item.text}".lower()))
 
     def within_max_age(self, published_at: datetime) -> bool:
         if self.max_age is None:
