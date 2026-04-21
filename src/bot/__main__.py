@@ -30,9 +30,11 @@ async def main() -> None:
         await bot.start(bot_token=bot_config.BOT_TOKEN)  # type: ignore[misc]
         logger.info("Bot started. Poll interval: %ds", bot_config.POLL_INTERVAL)
 
-        asyncio.create_task(notifier.run())
+        notify_task = asyncio.create_task(notifier.run(), name="notifier")
 
         await bot.run_until_disconnected()  # type: ignore[misc]
+        notify_task.cancel()
+        await asyncio.gather(notify_task, return_exceptions=True)
 
 
 def _build_client() -> TelegramClient:

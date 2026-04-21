@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime
+from html import escape
 
 from telethon import TelegramClient
 
@@ -12,11 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 def _format(item: NewsItem) -> str:
-    title = item.title or item.url
+    title = escape(item.title or item.url)
+    source = escape(item.source)
+    url = escape(item.url)
     excerpt = item.text[:300] + "…" if len(item.text) > 300 else item.text
-    parts: list[str] = [f"**{item.source}**", f"[{title}]({item.url})"]
+
+    parts: list[str] = [f"<b>{source}</b>", f'<a href="{url}">{title}</a>']
     if excerpt:
-        parts.append(excerpt)
+        parts.append(escape(excerpt))
     return "\n".join(parts)
 
 
@@ -37,7 +41,10 @@ class Notifier:
     async def run(self) -> None:
         while True:
             await asyncio.sleep(self._interval)
-            await self._deliver_all()
+            try:
+                await self._deliver_all()
+            except Exception:
+                logger.exception("Unexpected error in delivery loop")
 
 
     async def _deliver_all(self) -> None:
@@ -59,7 +66,7 @@ class Notifier:
 
         for item in new_items:
             try:
-                await self._bot.send_message(chat_id, _format(item), link_preview=False)
+                await self._bot.send_message(chat_id, _format(item), parse_mode='html', link_preview=False)
                 self._store.update_last_seen(chat_id, item.published_at)
             except Exception:
                 logger.exception("Failed to send to chat %d, will retry next cycle", chat_id)

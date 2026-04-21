@@ -31,7 +31,7 @@ class ApiClient:
         return [Feed(id=f["id"], name=f["name"]) for f in r.json()]
 
 
-    async def get_news(self, feed_id: str, limit: int = 50) -> list[NewsItem]:
+    async def get_news(self, feed_id: str, limit: int = 500) -> list[NewsItem]:
         r = await self._http.get(
             f"{self._base}/feeds/{feed_id}/news",
             params={"limit": limit, "all_time": "true"},
