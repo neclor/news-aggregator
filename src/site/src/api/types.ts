@@ -23,6 +23,14 @@ export interface NewsItem {
   is_read: boolean
 }
 
+export interface FeedStats {
+  total: number
+  read: number
+  unread: number
+  by_source: { source: string; count: number }[]
+  daily: { date: string; count: number }[]
+}
+
 export interface Source {
   url: string
   type: 'rss' | 'telegram' | 'site'

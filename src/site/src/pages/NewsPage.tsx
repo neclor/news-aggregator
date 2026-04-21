@@ -23,7 +23,7 @@ interface Props {
 
 export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
   const [items, setItems] = useState<NewsItem[]>([])
-  const [unreadOnly, setUnreadOnly] = useState(false)
+  const [unreadOnly, setUnreadOnly] = useState(true)
   const [allTime, setAllTime] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,12 +31,14 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
   const [fetching, setFetching] = useState(false)
   const [editing, setEditing] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [showSettings, setShowSettings] = useState(false)
+  const [statsKey, setStatsKey] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const loaded = await api.news.list(feed.id, unreadOnly, allTime, 100)
+      const loaded = await api.news.list(feed.id, unreadOnly, allTime, allTime ? 1000 : 200)
       setItems(loaded)
       setRead(new Set(loaded.filter(i => i.is_read).map(i => i.url)))
     } catch (e) {
@@ -52,6 +54,17 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     try {
       await api.news.markRead(feed.id, url)
       setRead(prev => new Set(prev).add(url))
+      setStatsKey(k => k + 1)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const markUnread = async (url: string) => {
+    try {
+      await api.news.markUnread(feed.id, url)
+      setRead(prev => { const s = new Set(prev); s.delete(url); return s })
+      setStatsKey(k => k + 1)
     } catch (e) {
       console.error(e)
     }
@@ -61,6 +74,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     try {
       await api.news.markAllRead(feed.id)
       setRead(new Set(items.map(i => i.url)))
+      setStatsKey(k => k + 1)
     } catch (e) {
       console.error(e)
     }
@@ -142,10 +156,15 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
           <button className="btn btn-ghost btn-sm" onClick={refresh} disabled={fetching}>
             {fetching ? '…' : '↻'}
           </button>
-          <button className="btn btn-ghost btn-sm" onClick={() => { setFormError(null); setEditing(true) }}>
-            Edit
-          </button>
-          <button className="btn btn-danger btn-sm" onClick={handleDelete}>Delete</button>
+          <div className="feed-settings-wrap">
+            <button className="btn btn-ghost btn-sm" onClick={() => setShowSettings(s => !s)}>⋯</button>
+            {showSettings && (
+              <div className="feed-settings-menu">
+                <button onClick={() => { setFormError(null); setEditing(true); setShowSettings(false) }}>Edit</button>
+                <button className="danger" onClick={handleDelete}>Delete</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -192,17 +211,18 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
                 </p>
               )}
 
-              {!isRead && (
-                <button className="news-mark-read" onClick={() => markRead(item.url)}>
-                  Mark as read
-                </button>
-              )}
+              <div className="news-card-actions">
+                {!isRead
+                  ? <button className="news-mark-read" onClick={() => markRead(item.url)}>Mark as read</button>
+                  : <button className="news-mark-unread" onClick={() => markUnread(item.url)}>Mark as unread</button>
+                }
+              </div>
             </article>
           )
         })}
           </div>
         </div>
-        <StatsPanel items={items} read={read} />
+        <StatsPanel feedId={feed.id} refreshKey={statsKey} />
       </div>
 
       {editing && (

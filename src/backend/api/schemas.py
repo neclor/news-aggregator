@@ -36,6 +36,24 @@ class NewsItemOut(BaseModel):
     is_read: bool
 
 
+class SourceStat(BaseModel):
+    source: str
+    count: int
+
+
+class DayStat(BaseModel):
+    date: str
+    count: int
+
+
+class FeedStatsOut(BaseModel):
+    total: int
+    read: int
+    unread: int
+    by_source: list[SourceStat]
+    daily: list[DayStat]
+
+
 class MarkReadIn(BaseModel):
     url: str
 

@@ -1,4 +1,4 @@
-import type { Feed, FeedIn, NewsItem, Source, SourceIn } from './types'
+import type { Feed, FeedIn, FeedStats, NewsItem, Source, SourceIn } from './types'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
@@ -36,6 +36,10 @@ export const api = {
     },
     markRead: (feedId: string, newsUrl: string) =>
       request<void>(`/feeds/${feedId}/news/mark-read`, { method: 'POST', body: body({ url: newsUrl }) }),
+    markUnread: (feedId: string, newsUrl: string) =>
+      request<void>(`/feeds/${feedId}/news/mark-unread`, { method: 'POST', body: body({ url: newsUrl }) }),
+    stats: (feedId: string) =>
+      request<FeedStats>(`/feeds/${feedId}/news/stats`),
     markAllRead: (feedId: string) =>
       request<void>(`/feeds/${feedId}/news/read`, { method: 'POST' }),
   },

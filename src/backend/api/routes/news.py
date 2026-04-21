@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query
 
 from backend.api.deps import NewsServiceDep
-from backend.api.schemas import MarkReadIn, NewsItemOut
+from backend.api.schemas import FeedStatsOut, MarkReadIn, NewsItemOut
 from backend.models.news_item import NewsItem
 from backend.utils.url_utils import normalize_url
 
@@ -25,6 +25,20 @@ async def get_news(
     return [_to_out(i) for i in items]
 
 
+@router.get("/stats", response_model=FeedStatsOut)
+async def get_stats(feed_id: UUID, service: NewsServiceDep) -> FeedStatsOut:
+    if not await service.get_feed(feed_id):
+        raise HTTPException(status_code=404)
+    stats = await service.get_stats(feed_id)
+    return FeedStatsOut(
+        total=stats.total,
+        read=stats.read,
+        unread=stats.unread,
+        by_source=[{"source": s["source"], "count": s["count"]} for s in stats.by_source],
+        daily=[{"date": d["date"], "count": d["count"]} for d in stats.daily],
+    )
+
+
 @router.post("/read", status_code=204)
 async def mark_all_read(feed_id: UUID, service: NewsServiceDep) -> None:
     if not await service.get_feed(feed_id):
@@ -37,6 +51,13 @@ async def mark_read(feed_id: UUID, body: MarkReadIn, service: NewsServiceDep) ->
     if not await service.get_feed(feed_id):
         raise HTTPException(status_code=404)
     await service.mark_read(feed_id, normalize_url(body.url))
+
+
+@router.post("/mark-unread", status_code=204)
+async def mark_unread(feed_id: UUID, body: MarkReadIn, service: NewsServiceDep) -> None:
+    if not await service.get_feed(feed_id):
+        raise HTTPException(status_code=404)
+    await service.mark_unread(feed_id, normalize_url(body.url))
 
 
 def _to_out(item: NewsItem) -> NewsItemOut:

@@ -86,6 +86,68 @@ class NewsRepository:
         await self._db.commit()
 
 
+    async def mark_unread(self, feed_id: UUID, news_url: str) -> None:
+        await self._db.execute(
+            "UPDATE feed_items SET is_read = 0 WHERE feed_id = ? AND news_url = ?",
+            (str(feed_id), news_url),
+        )
+        await self._db.commit()
+
+
+    async def get_stats(self, feed_id: UUID) -> "FeedStats":
+        fid = str(feed_id)
+
+        async with self._db.execute(
+            "SELECT COUNT(*) AS total, SUM(is_read) AS read_count FROM feed_items WHERE feed_id = ?",
+            (fid,),
+        ) as cur:
+            row = await cur.fetchone()
+        total: int = row["total"] or 0
+        read_count: int = row["read_count"] or 0
+
+        async with self._db.execute(
+            """
+            SELECT news_items.source, COUNT(*) AS cnt
+            FROM feed_items
+            JOIN news_items ON news_items.url = feed_items.news_url
+            WHERE feed_items.feed_id = ?
+            GROUP BY news_items.source
+            ORDER BY cnt DESC
+            LIMIT 10
+            """,
+            (fid,),
+        ) as cur:
+            by_source = [{"source": r["source"], "count": r["cnt"]} for r in await cur.fetchall()]
+
+        async with self._db.execute(
+            """
+            SELECT DATE(news_items.published_at) AS day, COUNT(*) AS cnt
+            FROM feed_items
+            JOIN news_items ON news_items.url = feed_items.news_url
+            WHERE feed_items.feed_id = ?
+              AND news_items.published_at >= DATE('now', '-6 days')
+            GROUP BY day
+            ORDER BY day
+            """,
+            (fid,),
+        ) as cur:
+            daily = [{"date": r["day"], "count": r["cnt"]} for r in await cur.fetchall()]
+
+        return FeedStats(total=total, read=read_count, unread=total - read_count, by_source=by_source, daily=daily)
+
+
+from dataclasses import dataclass, field
+
+
+@dataclass
+class FeedStats:
+    total: int
+    read: int
+    unread: int
+    by_source: list[dict]
+    daily: list[dict]
+
+
 def _row_to_item(row: aiosqlite.Row) -> NewsItem:
     return NewsItem(
         url=row["url"],

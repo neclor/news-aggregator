@@ -305,6 +305,48 @@ body {
 
 .news-mark-read:hover { color: var(--text); }
 
+.news-card-actions { display: flex; gap: 8px; }
+
+.news-mark-unread {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.5;
+}
+.news-mark-unread:hover { opacity: 1; color: var(--text); }
+
+.feed-settings-wrap { position: relative; }
+
+.feed-settings-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  z-index: 100;
+}
+.feed-settings-menu button {
+  background: none;
+  border: none;
+  padding: 8px 14px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+}
+.feed-settings-menu button:hover { background: var(--hover); }
+.feed-settings-menu button.danger { color: var(--danger, #e53e3e); }
+
 /* ── Sources ─────────────────────────────── */
 
 .source-groups { display: flex; flex-direction: column; gap: 24px; }

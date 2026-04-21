@@ -1,38 +1,35 @@
-import type { NewsItem } from '../api/types'
+import { useState, useEffect } from 'react'
+import { api } from '../api/client'
+import type { FeedStats } from '../api/types'
 
 interface Props {
-  items: NewsItem[]
-  read: Set<string>
+  feedId: string
+  refreshKey: number
 }
 
-function dayLabel(iso: string): string {
-  return ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][new Date(iso).getDay()]
-}
+const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
-export default function StatsPanel({ items, read }: Props) {
-  const total = items.length
-  const unread = items.filter(i => !read.has(i.url)).length
-
-  const bySource = items.reduce((acc, i) => {
-    acc[i.source] = (acc[i.source] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
-  const sources = Object.entries(bySource).sort((a, b) => b[1] - a[1]).slice(0, 7)
-  const maxSrc = sources[0]?.[1] || 1
-
-  const days = Array.from({ length: 7 }, (_, i) => {
+function last7Days(): string[] {
+  return Array.from({ length: 7 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() - (6 - i))
     return d.toISOString().slice(0, 10)
   })
-  const byDay = items.reduce((acc, i) => {
-    const day = i.published_at.slice(0, 10)
-    acc[day] = (acc[day] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
-  const maxDay = Math.max(...days.map(d => byDay[d] || 0), 1)
+}
 
-  if (total === 0) return null
+export default function StatsPanel({ feedId, refreshKey }: Props) {
+  const [stats, setStats] = useState<FeedStats | null>(null)
+
+  useEffect(() => {
+    api.news.stats(feedId).then(setStats).catch(() => null)
+  }, [feedId, refreshKey])
+
+  if (!stats || stats.total === 0) return null
+
+  const days = last7Days()
+  const byDay = Object.fromEntries(stats.daily.map(d => [d.date, d.count]))
+  const maxDay = Math.max(...days.map(d => byDay[d] || 0), 1)
+  const maxSrc = stats.by_source[0]?.count || 1
 
   return (
     <aside className="stats-panel">
@@ -40,24 +37,24 @@ export default function StatsPanel({ items, read }: Props) {
         <div className="stats-title">Overview</div>
         <div className="stats-row">
           <span>Total</span>
-          <span className="stats-val">{total}</span>
+          <span className="stats-val">{stats.total}</span>
         </div>
         <div className="stats-row">
           <span>Unread</span>
-          <span className="stats-val stats-accent">{unread}</span>
+          <span className="stats-val stats-accent">{stats.unread}</span>
         </div>
         <div className="stats-row">
           <span>Read</span>
-          <span className="stats-val">{total - unread}</span>
+          <span className="stats-val">{stats.read}</span>
         </div>
       </div>
 
-      {sources.length > 1 && (
+      {stats.by_source.length > 1 && (
         <div className="stats-section">
           <div className="stats-title">By source</div>
-          {sources.map(([src, count]) => (
-            <div key={src} className="stats-source-row">
-              <div className="stats-source-name" title={src}>{src}</div>
+          {stats.by_source.map(({ source, count }) => (
+            <div key={source} className="stats-source-row">
+              <div className="stats-source-name" title={source}>{source}</div>
               <div className="stats-bar-wrap">
                 <div className="stats-bar" style={{ width: `${(count / maxSrc) * 100}%` }} />
               </div>
@@ -79,7 +76,7 @@ export default function StatsPanel({ items, read }: Props) {
                   title={`${byDay[day] || 0}`}
                 />
               </div>
-              <div className="stats-day-label">{dayLabel(day)}</div>
+              <div className="stats-day-label">{DAY_LABELS[new Date(day + 'T12:00:00').getDay()]}</div>
             </div>
           ))}
         </div>

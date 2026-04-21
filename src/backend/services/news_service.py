@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+from typing import Literal
 from uuid import UUID
 
 from backend.infra.aggregator import aggregator
@@ -8,7 +9,7 @@ from backend.models.source_config import SourceConfig
 from backend.models.feed import Feed
 from backend.models.news_item import NewsItem
 from backend.infra.db.feed_repo import FeedRepository
-from backend.infra.db.news_repo import NewsRepository
+from backend.infra.db.news_repo import FeedStats, NewsRepository
 from backend.infra.db.source_repo import SourceRepository
 from backend.infra.aggregator.parsers.parser import Parser
 from backend.services.telegram_connection import TelegramConnection
@@ -44,7 +45,7 @@ class NewsService:
         for url in urls:
             if url in existing:
                 continue
-            inferred = "telegram" if (url.startswith("@") or "t.me/" in url) else "rss"
+            inferred: Literal["telegram", "rss"] = "telegram" if (url.startswith("@") or "t.me/" in url) else "rss"
             await self.add_source(SourceConfig(url=url, type=inferred))
             logger.info("Auto-registered source: %s (%s)", url, inferred)
 
@@ -85,6 +86,14 @@ class NewsService:
 
     async def mark_all_read(self, feed_id: UUID) -> None:
         await self._news_repo.mark_all_read(feed_id)
+
+
+    async def mark_unread(self, feed_id: UUID, news_url: str) -> None:
+        await self._news_repo.mark_unread(feed_id, news_url)
+
+
+    async def get_stats(self, feed_id: UUID) -> "FeedStats":
+        return await self._news_repo.get_stats(feed_id)
 
 
     async def get_news(self, feed_id: UUID, *, unread_only: bool = False, all_time: bool = False, limit: int = 100) -> list[NewsItem]:
