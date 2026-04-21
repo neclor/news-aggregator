@@ -20,6 +20,7 @@ export interface NewsItem {
   text: string
   published_at: string
   author: string | null
+  is_read: boolean
 }
 
 export interface Source {

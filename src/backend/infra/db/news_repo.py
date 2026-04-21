@@ -35,7 +35,7 @@ class NewsRepository:
 
     async def get_by_feed(self, feed_id: UUID, *, keywords: list[str] | None = None, not_before: datetime | None = None, unread_only: bool = False, limit: int = 100) -> list[NewsItem]:
         query = """
-            SELECT news_items.* FROM news_items
+            SELECT news_items.*, feed_items.is_read FROM news_items
             JOIN feed_items ON feed_items.news_url = news_items.url
             WHERE feed_items.feed_id = ?
         """
@@ -95,4 +95,5 @@ def _row_to_item(row: aiosqlite.Row) -> NewsItem:
         text=row["text"],
         published_at=datetime.fromisoformat(row["published_at"]),
         author=row["author"],
+        is_read=bool(row["is_read"]) if "is_read" in row.keys() else False,
     )

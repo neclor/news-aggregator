@@ -12,6 +12,7 @@ class NewsItem:
     text: str
     published_at: datetime
     author: str | None = None
+    is_read: bool = False
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "url", normalize_url(self.url))

@@ -48,4 +48,5 @@ def _to_out(item: NewsItem) -> NewsItemOut:
         text=item.text,
         published_at=item.published_at,
         author=item.author,
+        is_read=item.is_read,
     )

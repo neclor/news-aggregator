@@ -28,6 +28,7 @@ class NewsItemOut(BaseModel):
     text: str
     published_at: datetime
     author: str | None
+    is_read: bool
 
 
 class SiteSelectorsIn(BaseModel):
