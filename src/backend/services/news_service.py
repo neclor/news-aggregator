@@ -100,7 +100,15 @@ class NewsService:
         return await self._news_repo.get_stats(feed_id)
 
 
-    async def get_news(self, feed_id: UUID, *, unread_only: bool = False, all_time: bool = False, limit: int = 100, q: str | None = None) -> list[NewsItem]:
+    async def get_news(
+        self,
+        feed_id: UUID,
+        *,
+        unread_only: bool = False,
+        all_time: bool = False,
+        limit: int = 100,
+        q: str | None = None
+    ) -> list[NewsItem]:
         feed = await self._feed_repo.get(feed_id)
         keywords = feed.keywords if feed else None
         blacklist = feed.blacklist if feed else None
