@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timezone
-from typing import Literal
 from uuid import UUID
 
 from backend.infra.aggregator import aggregator
@@ -13,6 +12,7 @@ from backend.infra.db.news_repo import NewsRepository
 from backend.models.feed_stats import FeedStats
 from backend.infra.db.source_repo import SourceRepository
 from backend.infra.aggregator.parsers.parser import Parser
+from backend.models.parser_type import ParserType
 from backend.services.telegram_connection import TelegramConnection
 
 
@@ -43,11 +43,10 @@ class NewsService:
 
 
     async def _auto_register_sources(self, urls: list[str]) -> None:
-        existing = {s.url for s in await self._source_repo.get_all()}
         for url in urls:
-            if url in existing:
+            if await self._source_repo.exists(url):
                 continue
-            inferred: Literal["telegram", "rss"] = "telegram" if (url.startswith("@") or "t.me/" in url) else "rss"
+            inferred: ParserType = "telegram" if (url.startswith("@") or "t.me/" in url) else "rss"
             await self.add_source(SourceConfig(url=url, type=inferred))
             logger.info("Auto-registered source: %s (%s)", url, inferred)
 

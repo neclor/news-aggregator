@@ -45,6 +45,14 @@ class SourceRepository:
         return deleted
 
 
+    async def exists(self, url: str) -> bool:
+        async with self._db.execute(
+            "SELECT EXISTS(SELECT 1 FROM sources WHERE url = ?)", (url,)
+        ) as cursor:
+            row = await cursor.fetchone()
+        return bool(row[0])
+
+
     async def get_all(self) -> list[SourceConfig]:
         async with self._db.execute("SELECT * FROM sources") as cursor:
             rows = await cursor.fetchall()
