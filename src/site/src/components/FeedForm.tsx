@@ -11,6 +11,7 @@ export default function FeedForm({ initial, onSave, onCancel }: Props) {
   const [name, setName] = useState(initial?.name ?? '')
   const [sources, setSources] = useState(initial?.sources.join('\n') ?? '')
   const [keywords, setKeywords] = useState(initial?.keywords.join('\n') ?? '')
+  const [blacklist, setBlacklist] = useState(initial?.blacklist.join('\n') ?? '')
   const [maxAge, setMaxAge] = useState(initial?.max_age_hours?.toString() ?? '')
   const [saving, setSaving] = useState(false)
 
@@ -21,6 +22,7 @@ export default function FeedForm({ initial, onSave, onCancel }: Props) {
       name: name.trim(),
       sources: sources.split('\n').map(s => s.trim()).filter(Boolean),
       keywords: keywords.split('\n').map(s => s.trim()).filter(Boolean),
+      blacklist: blacklist.split('\n').map(s => s.trim()).filter(Boolean),
       max_age_hours: maxAge ? Number(maxAge) : null,
     })
     setSaving(false)
@@ -65,6 +67,20 @@ export default function FeedForm({ initial, onSave, onCancel }: Props) {
           value={keywords}
           onChange={e => setKeywords(e.target.value)}
           placeholder={'technology\nscience'}
+          rows={3}
+        />
+      </div>
+
+      <div className="form-field">
+        <label className="form-label">
+          Blacklist
+          <span className="form-hint"> — one per line, items with these words are hidden</span>
+        </label>
+        <textarea
+          className="form-input"
+          value={blacklist}
+          onChange={e => setBlacklist(e.target.value)}
+          placeholder={'spam\nadvertisement'}
           rows={3}
         />
       </div>

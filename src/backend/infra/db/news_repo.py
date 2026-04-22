@@ -35,7 +35,17 @@ class NewsRepository:
         await self._db.commit()
 
 
-    async def get_by_feed(self, feed_id: UUID, *, keywords: list[str] | None = None, not_before: datetime | None = None, unread_only: bool = False, limit: int = 100, q: str | None = None) -> list[NewsItem]:
+    async def get_by_feed(
+            self,
+            feed_id: UUID,
+            *,
+            keywords: list[str] | None = None,
+            blacklist: list[str] | None = None,
+            not_before: datetime | None = None,
+            unread_only: bool = False,
+            limit: int = 100,
+            q: str | None = None
+    ) -> list[NewsItem]:
         query = """
             SELECT news_items.*, feed_items.is_read FROM news_items
             JOIN feed_items ON feed_items.news_url = news_items.url
@@ -61,6 +71,9 @@ class NewsRepository:
         if keywords:
             pattern = re.compile(r'\b(' + '|'.join(re.escape(kw.lower()) for kw in keywords) + r')\b')
             items = [i for i in items if pattern.search(f"{i.title} {i.text}".lower())]
+        if blacklist:
+            bl_pattern = re.compile(r'\b(' + '|'.join(re.escape(kw.lower()) for kw in blacklist) + r')\b')
+            items = [i for i in items if not bl_pattern.search(f"{i.title} {i.text}".lower())]
         return items[:limit]
 
 

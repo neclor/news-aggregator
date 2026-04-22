@@ -37,6 +37,13 @@ class FeedRepository:
             "INSERT INTO feed_keywords (feed_id, keyword) VALUES (?, ?)",
             [(str(feed.id), kw) for kw in feed.keywords],
         )
+        await self._db.execute(
+            "DELETE FROM feed_blacklist WHERE feed_id = ?", (str(feed.id),)
+        )
+        await self._db.executemany(
+            "INSERT INTO feed_blacklist (feed_id, keyword) VALUES (?, ?)",
+            [(str(feed.id), kw) for kw in feed.blacklist],
+        )
         await self._db.commit()
 
 
@@ -95,6 +102,11 @@ class FeedRepository:
         ) as cursor:
             kw_rows = await cursor.fetchall()
 
+        async with self._db.execute(
+            f"SELECT feed_id, keyword FROM feed_blacklist WHERE feed_id IN ({ph})", ids
+        ) as cursor:
+            bl_rows = await cursor.fetchall()
+
         sources: dict[str, list[str]] = {}
         for r in src_rows:
             sources.setdefault(r["feed_id"], []).append(r["source_url"])
@@ -103,12 +115,17 @@ class FeedRepository:
         for r in kw_rows:
             keywords.setdefault(r["feed_id"], []).append(r["keyword"])
 
+        blacklist: dict[str, list[str]] = {}
+        for r in bl_rows:
+            blacklist.setdefault(r["feed_id"], []).append(r["keyword"])
+
         return [
             Feed(
                 id=UUID(r["id"]),
                 name=r["name"],
                 sources=sources.get(r["id"], []),
                 keywords=keywords.get(r["id"], []),
+                blacklist=blacklist.get(r["id"], []),
                 max_age=timedelta(seconds=r["max_age_sec"]) if r["max_age_sec"] is not None else None,
             )
             for r in feed_rows
@@ -128,11 +145,17 @@ class FeedRepository:
         ) as cursor:
             keywords = [r["keyword"] for r in await cursor.fetchall()]
 
+        async with self._db.execute(
+            "SELECT keyword FROM feed_blacklist WHERE feed_id = ?", (feed_id,)
+        ) as cursor:
+            blacklist = [r["keyword"] for r in await cursor.fetchall()]
+
         return Feed(
             name=row["name"],
             id=UUID(feed_id),
             sources=sources,
             keywords=keywords,
+            blacklist=blacklist,
             max_age=(
                 timedelta(seconds=row["max_age_sec"])
                 if row["max_age_sec"] is not None

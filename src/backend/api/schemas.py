@@ -10,9 +10,10 @@ class FeedIn(BaseModel):
     name: str
     sources: list[str] = []
     keywords: list[str] = []
+    blacklist: list[str] = []
     max_age_hours: float | None = Field(default=None, gt=0)
 
-    @field_validator('keywords', 'sources', mode='before')
+    @field_validator('keywords', 'sources', 'blacklist', mode='before')
     @classmethod
     def deduplicate(cls, v: list[str]) -> list[str]:
         return list(dict.fromkeys(kw for kw in v if kw))
@@ -23,6 +24,7 @@ class FeedOut(BaseModel):
     name: str
     sources: list[str]
     keywords: list[str]
+    blacklist: list[str]
     max_age_hours: float | None
 
 

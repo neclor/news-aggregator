@@ -22,6 +22,7 @@ async def create_feed(body: FeedIn, service: NewsServiceDep) -> FeedOut:
         name=body.name,
         sources=body.sources,
         keywords=body.keywords,
+        blacklist=body.blacklist,
         max_age=timedelta(hours=body.max_age_hours) if body.max_age_hours else None,
     )
     await service.add_feed(feed)
@@ -43,6 +44,7 @@ async def update_feed(feed_id: UUID, body: FeedIn, service: NewsServiceDep) -> F
         name=body.name,
         sources=body.sources,
         keywords=body.keywords,
+        blacklist=body.blacklist,
         max_age=timedelta(hours=body.max_age_hours) if body.max_age_hours else None,
     )
     await service.add_feed(feed)
@@ -61,5 +63,6 @@ def _to_out(feed: Feed) -> FeedOut:
         name=feed.name,
         sources=feed.sources,
         keywords=feed.keywords,
+        blacklist=feed.blacklist,
         max_age_hours=feed.max_age.total_seconds() / 3600 if feed.max_age else None,
     )

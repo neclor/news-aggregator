@@ -103,9 +103,10 @@ class NewsService:
     async def get_news(self, feed_id: UUID, *, unread_only: bool = False, all_time: bool = False, limit: int = 100, q: str | None = None) -> list[NewsItem]:
         feed = await self._feed_repo.get(feed_id)
         keywords = feed.keywords if feed else None
+        blacklist = feed.blacklist if feed else None
         not_before = (datetime.now(timezone.utc) - feed.max_age) if (feed and feed.max_age and not all_time) else None
         return await self._news_repo.get_by_feed(
-            feed_id, keywords=keywords, not_before=not_before, unread_only=unread_only, limit=limit, q=q
+            feed_id, keywords=keywords, blacklist=blacklist, not_before=not_before, unread_only=unread_only, limit=limit, q=q
         )
 
 
@@ -123,16 +124,13 @@ class NewsService:
             except ValueError:
                 logger.warning("Skipping source '%s': no suitable parser available", cfg.url)
 
-        if not parsers:
-            return
+        if not parsers: return
 
         async for parser, items in aggregator.fetch(parsers):
             relevant_feeds: list[Feed] = [feed for feed in feeds if parser.url in feed.sources]
             for item in items:
                 is_new: bool = await self._news_repo.save(item)
-                if not is_new:
-                    continue
+                if not is_new: continue
+
                 for feed in relevant_feeds:
                     await self._news_repo.link_to_feed(feed.id, item.url)
-
-

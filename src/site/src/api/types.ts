@@ -3,6 +3,7 @@ export interface Feed {
   name: string
   sources: string[]
   keywords: string[]
+  blacklist: string[]
   max_age_hours: number | null
 }
 
@@ -10,6 +11,7 @@ export interface FeedIn {
   name: string
   sources: string[]
   keywords: string[]
+  blacklist: string[]
   max_age_hours: number | null
 }
 

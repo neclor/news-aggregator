@@ -11,8 +11,10 @@ class Feed:
     id: UUID = field(default_factory=uuid4)
     sources: list[str] = field(default_factory=list)
     keywords: list[str] = field(default_factory=list)
+    blacklist: list[str] = field(default_factory=list)
     max_age: timedelta | None = None
 
     def __post_init__(self) -> None:
         self.sources = [normalize_url(url) for url in self.sources]
         self.keywords = [kw for kw in self.keywords if kw.strip()]
+        self.blacklist = [kw for kw in self.blacklist if kw.strip()]
