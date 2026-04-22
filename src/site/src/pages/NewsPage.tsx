@@ -150,11 +150,6 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
           <div className="page-header">
             <div className="page-header-info">
               <h2 className="page-title">{feed.name}</h2>
-              {feed.keywords.length > 0 && (
-                <p className="page-subtitle" title={feed.keywords.join(', ')}>
-                  {feed.keywords.join(' · ')}
-                </p>
-              )}
             </div>
             <div className="page-actions">
               <label className="toggle-label">
