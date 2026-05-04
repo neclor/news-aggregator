@@ -1,4 +1,3 @@
-import re
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -57,24 +56,28 @@ class NewsRepository:
             params.append(not_before.isoformat())
         if unread_only:
             query += " AND feed_items.is_read = 0"
+        if keywords:
+            fts_kw = _fts_query(keywords)
+            if fts_kw:
+                query += " AND news_items.url IN (SELECT url FROM news_fts WHERE news_fts MATCH ?)"
+                params.append(fts_kw)
+        if blacklist:
+            fts_bl = _fts_query(blacklist)
+            if fts_bl:
+                query += " AND news_items.url NOT IN (SELECT url FROM news_fts WHERE news_fts MATCH ?)"
+                params.append(fts_bl)
         if q:
-            fts_q = _fts_query(q)
+            fts_q = _fts_query(q.split())
             if fts_q:
                 query += " AND news_items.url IN (SELECT url FROM news_fts WHERE news_fts MATCH ?)"
                 params.append(fts_q)
-        query += " ORDER BY news_items.published_at DESC"
+        query += " ORDER BY news_items.published_at DESC LIMIT ?"
+        params.append(limit)
 
         async with self._db.execute(query, params) as cursor:
             rows = await cursor.fetchall()
 
-        items = [_row_to_item(r) for r in rows]
-        if keywords:
-            pattern = re.compile(r'\b(' + '|'.join(re.escape(kw.lower()) for kw in keywords) + r')\b')
-            items = [i for i in items if pattern.search(f"{i.title} {i.text}".lower())]
-        if blacklist:
-            bl_pattern = re.compile(r'\b(' + '|'.join(re.escape(kw.lower()) for kw in blacklist) + r')\b')
-            items = [i for i in items if not bl_pattern.search(f"{i.title} {i.text}".lower())]
-        return items[:limit]
+        return [_row_to_item(r) for r in rows]
 
 
     async def get_by_sources(self, sources: list[str]) -> list[NewsItem]:
@@ -155,9 +158,9 @@ class NewsRepository:
         return FeedStats(total=total, read=read_count, unread=total - read_count, by_source=by_source, daily=daily)
 
 
-def _fts_query(q: str) -> str:
-    tokens = [t.replace('"', '') for t in q.split() if t.replace('"', '')]
-    return ' '.join(f'"{t}"' for t in tokens)
+def _fts_query(words: list[str]) -> str:
+    tokens = [t.replace('"', '') for t in words if t.replace('"', '')]
+    return ' OR '.join(f'"{t}"' for t in tokens)
 
 
 def _row_to_item(row: aiosqlite.Row) -> NewsItem:

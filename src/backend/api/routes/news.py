@@ -18,7 +18,7 @@ async def get_news(
     service: NewsServiceDep,
     unread_only: bool = False,
     all_time: bool = False,
-    limit: int = Query(default=100, ge=1, le=1000),
+    limit: int = Query(default=50, ge=1, le=1000),
     q: str | None = Query(default=None, max_length=200),
 ) -> list[NewsItemOut]:
     if not await service.get_feed(feed_id):

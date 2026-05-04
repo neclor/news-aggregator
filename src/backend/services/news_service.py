@@ -105,7 +105,7 @@ class NewsService:
         *,
         unread_only: bool = False,
         all_time: bool = False,
-        limit: int = 100,
+        limit: int = 50,
         q: str | None = None
     ) -> list[NewsItem]:
         feed = await self._feed_repo.get(feed_id)

@@ -64,7 +64,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const loaded = await api.news.list(feed.id, unreadOnly, allTime, allTime ? 1000 : 200, q || undefined)
+      const loaded = await api.news.list(feed.id, unreadOnly, allTime, allTime ? 1000 : 100, q || undefined)
       setItems(loaded)
       setRead(new Set(loaded.filter(i => i.is_read).map(i => i.url)))
     } catch (e) {
