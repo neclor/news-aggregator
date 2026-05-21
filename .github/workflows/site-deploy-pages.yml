@@ -2,7 +2,7 @@ name: Deploy UI (GitHub Pages)
 
 on:
   workflow_run:
-    workflows: [Build UI]
+    workflows: [Build Site]
     types: [completed]
     branches: [main]
 
