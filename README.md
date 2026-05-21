@@ -1,51 +1,16 @@
 # News Aggregator
 
-Aggregates news from RSS feeds, websites, and Telegram channels. Includes a web UI, REST API, and Telegram bot.
+[news.neclor.com](https://news.neclor.com) · [GitHub Pages](https://neclor.github.io/news-aggregator)
+[Telegram bot](https://t.me/neclor_news_aggregator_bot)
 
-## Components
+## About
 
-- **Backend** — FastAPI, fetches news and serves it via REST API
-- **Frontend** — web interface for reading news
-- **Bot** — Telegram bot for notifications
+Collects news from RSS feeds, websites, and Telegram channels into a single feed. Includes a web UI, REST API, and Telegram bot for notifications.
 
-## Running
-
-### Requirements
-
-- Docker and Docker Compose
-
-### Configuration
-
-Copy `.env.example` and fill in the values:
+## Setup
 
 ```bash
-cp configs/.env.example configs/.env
+cp .env.example .env
+# fill in TG_BOT_TOKEN and Telegram API credentials
+docker compose up -d
 ```
-
-```env
-TG_API_ID=       # api_id from my.telegram.org
-TG_API_HASH=     # api_hash from my.telegram.org
-TG_BOT_TOKEN=    # bot token from @BotFather
-```
-
-`TG_API_ID` and `TG_API_HASH` are only needed if you use Telegram channels as sources.
-
-### Start
-
-```bash
-docker-compose up -d
-```
-
-Web UI will be available at `http://localhost:5300`.
-
-## Sources
-
-Supported source types:
-
-- **RSS** — any RSS/Atom feed
-- **Telegram** — channels (by `@username` or `t.me/...` link)
-- **Site** — website scraping via CSS selectors
-
-## Data
-
-The database and session files are stored in the `data/` folder. News is fetched automatically every 10 minutes.

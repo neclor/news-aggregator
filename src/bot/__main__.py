@@ -6,29 +6,28 @@ from telethon import TelegramClient
 
 from .configs import bot_config
 from .api import ApiClient
-from .handlers import Handlers
-from .notifier import Notifier
-from .store import Store
+from .services import Handlers, Notifier
+from .storage import Store
 
 
 logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    if not bot_config.BOT_TOKEN:
-        raise RuntimeError("TG_BOT_TOKEN is not set in configs/.env")
+    if not bot_config.TG_BOT_TOKEN:
+        raise RuntimeError("TG_BOT_TOKEN is not set")
 
-    store = Store(bot_config.DATA_FILE)
+    store = Store(bot_config.BOT_DATA_PATH)
 
     async with httpx.AsyncClient() as http:
-        api = ApiClient(bot_config.API_BASE, http)
+        api = ApiClient(bot_config.BACKEND_URL, http)
         bot = _build_client()
 
         Handlers(store, api).register(bot)
-        notifier = Notifier(bot, api, store, bot_config.POLL_INTERVAL)
+        notifier = Notifier(bot, api, store, bot_config.BOT_POLL_INTERVAL)
 
-        await bot.start(bot_token=bot_config.BOT_TOKEN)  # type: ignore[misc]
-        logger.info("Bot started. Poll interval: %ds", bot_config.POLL_INTERVAL)
+        await bot.start(bot_token=bot_config.TG_BOT_TOKEN)  # type: ignore[misc]
+        logger.info("Bot started. Poll interval: %ds", bot_config.BOT_POLL_INTERVAL)
 
         notify_task = asyncio.create_task(notifier.run(), name="notifier")
 
@@ -39,9 +38,9 @@ async def main() -> None:
 
 def _build_client() -> TelegramClient:
     return TelegramClient(
-        str(bot_config.SESSION_PATH),
-        bot_config.API_ID,
-        bot_config.API_HASH,
+        str(bot_config.TG_BOT_SESSION_PATH),
+        bot_config.TG_BOT_API_ID,
+        bot_config.TG_BOT_API_HASH,
         connection_retries=-1,
         retry_delay=10,
     )

@@ -1,6 +1,7 @@
 # Secret
 .env
-.session
+*.session
+*.session-journal
 data/
 
 # Byte-compiled / optimized / DLL files
@@ -315,7 +316,6 @@ vite.config.ts.timestamp-*
 .directory
 .DS_Store
 *~
-*.blend1
 
 # AI
 .claude/

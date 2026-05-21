@@ -5,14 +5,13 @@ from pathlib import Path
 LOG_LEVEL: int = logging.WARNING
 LOG_FORMAT: str = "[%(levelname)s %(asctime)s] %(name)s: %(message)s"
 DATE_FORMAT: str = "%d-%m-%Y %H:%M"
-LOG_PATH: Path = Path(__file__).parent.parent.parent.parent / "logs" / "backend.log"
+LOG_PATH: Path = Path("logs/backend.log")
 
 
-def setup() -> None:
-    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(
-        level=LOG_LEVEL,
-        format=LOG_FORMAT,
-        datefmt=DATE_FORMAT,
-        handlers=[logging.FileHandler(LOG_PATH), logging.StreamHandler()],
-    )
+LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format=LOG_FORMAT,
+    datefmt=DATE_FORMAT,
+    handlers=[logging.FileHandler(LOG_PATH), logging.StreamHandler()],
+)

@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-from backend.models.parser_type import ParserType
+from backend.models import ParserType
 
 
 class FeedIn(BaseModel):

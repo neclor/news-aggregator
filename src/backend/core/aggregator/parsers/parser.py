@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from backend.models.news_item import NewsItem
+from backend.models import NewsItem
 
 
 class Parser(ABC):

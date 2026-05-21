@@ -1,11 +1,8 @@
-import httpx
+﻿import httpx
 from telethon import TelegramClient
 
-from backend.infra.aggregator.parsers.parser import Parser
-from backend.infra.aggregator.parsers.rss import RssParser
-from backend.infra.aggregator.parsers.site import SiteParser
-from backend.infra.aggregator.parsers.telegram import TelegramParser
-from backend.models.source_config import SourceConfig
+from backend.core.aggregator.parsers import Parser, RssParser, SiteParser, TelegramParser
+from backend.models import SourceConfig
 
 
 class ParserFactory:

@@ -1,0 +1,38 @@
+name: Deploy UI (Server)
+
+on:
+  workflow_run:
+    workflows: [Build UI]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Deploy to server
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+          PORT: ${{ secrets.SSH_PORT }}
+          KEY: ${{ secrets.SSH_KEY }}
+
+          WEB_DIR: ${{ vars.WEB_DIR }}
+
+        run: |
+          echo "$KEY" > ssh_key
+          chmod 600 ssh_key
+
+          ssh -i ssh_key \
+            -p $PORT \
+            -o StrictHostKeyChecking=no \
+            $USER@$HOST \
+            "curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/news-aggregator-site.zip \
+              -o /tmp/news-aggregator-site.zip \
+              && mkdir -p $WEB_DIR \
+              && unzip -o /tmp/news-aggregator-site.zip -d $WEB_DIR \
+              && rm /tmp/news-aggregator-site.zip"
+
+          rm ssh_key

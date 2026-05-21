@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from datetime import datetime, timezone
 
 import httpx
@@ -6,9 +6,8 @@ from parsel import Selector
 from urllib.parse import urljoin
 
 from backend.utils.http_utils import random_user_agent_headers
-from backend.models.news_item import NewsItem
-from backend.infra.aggregator.parsers.parser import Parser
-from backend.models.site_selectors import SiteSelectors
+from backend.models import NewsItem, SiteSelectors
+from backend.core.aggregator.parsers.parser import Parser
 
 
 logger: logging.Logger = logging.getLogger(__name__)

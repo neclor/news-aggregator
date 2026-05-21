@@ -5,8 +5,8 @@ from html import escape
 
 from telethon import TelegramClient
 
-from .api import ApiClient, NewsItem
-from .store import Store
+from bot.api import ApiClient, NewsItem
+from bot.storage import Store
 
 
 logger = logging.getLogger(__name__)

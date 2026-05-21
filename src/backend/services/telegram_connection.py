@@ -61,9 +61,9 @@ class TelegramConnection:
                     logger.info("Telegram connected")
                     self._connected.set()
                     await self._client.disconnected
-                    logger.warning("Telegram connection lost, reconnecting in %ds", app_config.TG_RECONNECT_DELAY)
+                    logger.warning("Telegram connection lost, reconnecting in %ds", app_config.TG_BACKEND_RECONNECT_DELAY)
             except Exception:
-                logger.exception("Telegram connection error, retrying in %ds", app_config.TG_RECONNECT_DELAY)
+                logger.exception("Telegram connection error, retrying in %ds", app_config.TG_BACKEND_RECONNECT_DELAY)
             finally:
                 self._connected.clear()
-            await asyncio.sleep(app_config.TG_RECONNECT_DELAY)
+            await asyncio.sleep(app_config.TG_BACKEND_RECONNECT_DELAY)

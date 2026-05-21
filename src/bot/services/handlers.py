@@ -4,8 +4,8 @@ from typing import Any
 from telethon import TelegramClient
 from telethon.events import NewMessage
 
-from .api import ApiClient
-from .store import Store
+from bot.api import ApiClient
+from bot.storage import Store
 
 
 HELP = (

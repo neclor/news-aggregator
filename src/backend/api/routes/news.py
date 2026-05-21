@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from backend.api.deps import NewsServiceDep
 from backend.api.schemas import FeedStatsOut, MarkReadIn, NewsItemOut
-from backend.models.news_item import NewsItem
+from backend.models import NewsItem
 from backend.utils.url_utils import normalize_url
 
 

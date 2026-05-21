@@ -1,0 +1,52 @@
+name: Build UI
+
+on:
+  push:
+    branches: [main]
+    paths: [src/site/**]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: src/site/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/site
+        run: npm ci
+
+      - name: Build
+        working-directory: src/site
+        run: npm run build
+        env:
+          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: news-aggregator-site
+          path: src/site/dist
+          retention-days: 1
+
+      - name: Zip build
+        run: cd src/site/dist && zip -r ../../../news-aggregator-site.zip .
+
+      - name: Update latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest UI build
+          prerelease: true
+          make_latest: true
+          files: news-aggregator-site.zip

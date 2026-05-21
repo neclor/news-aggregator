@@ -1,42 +1,62 @@
+name: news-aggregator
+
 services:
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+    image: ghcr.io/neclor/news-aggregator/backend:latest
     container_name: news-aggregator-backend
-    env_file: configs/.env
+    env_file: .env
+    environment:
+      DB_PATH: /data/news.db
+      TG_BACKEND_SESSION_PATH: /data/backend_session
     ports:
-      - "5300:8000"
+      - "${SERVER_PORT:-8080}:8000"
     volumes:
-      - ./data:/app/data
-      - ./configs/.env:/app/configs/.env:ro
+      - ${HOST_DATA_DIR:-./data}:/data
     restart: unless-stopped
     networks:
-      - aggregator-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - news-aggregator-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile.bot
+    image: ghcr.io/neclor/news-aggregator/bot:latest
     container_name: news-aggregator-bot
-    env_file: configs/.env
+    env_file: .env
     environment:
-      - API_BASE=http://backend:8000
+      BACKEND_URL: http://backend:8000
+      TG_BOT_SESSION_PATH: /data/bot_session
+      BOT_DATA_PATH: /data/bot_data.json
     volumes:
-      - ./data:/app/data
-      - ./configs/.env:/app/configs/.env:ro
+      - ${HOST_DATA_DIR:-./data}:/data
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
     networks:
-      - aggregator-network
+      - news-aggregator-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          memory: 32M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
-  aggregator-network:
+  news-aggregator-network:
     driver: bridge

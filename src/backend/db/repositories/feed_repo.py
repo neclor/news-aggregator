@@ -3,7 +3,7 @@ from uuid import UUID
 
 import aiosqlite
 
-from backend.models.feed import Feed
+from backend.models import Feed
 
 
 class FeedRepository:

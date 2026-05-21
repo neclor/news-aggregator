@@ -2,8 +2,7 @@ import json
 
 import aiosqlite
 
-from backend.models.source_config import DEFAULT_LIMIT, SourceConfig
-from backend.models.site_selectors import SiteSelectors
+from backend.models import DEFAULT_LIMIT, SourceConfig, SiteSelectors
 
 
 class SourceRepository:
@@ -50,7 +49,7 @@ class SourceRepository:
             "SELECT EXISTS(SELECT 1 FROM sources WHERE url = ?)", (url,)
         ) as cursor:
             row = await cursor.fetchone()
-        return bool(row[0])
+        return bool(row[0]) if row else False
 
 
     async def get_all(self) -> list[SourceConfig]:

@@ -1,9 +1,9 @@
-import logging
+﻿import logging
 
 from telethon import TelegramClient
 
-from backend.models.news_item import NewsItem
-from backend.infra.aggregator.parsers.parser import Parser
+from backend.models import NewsItem
+from backend.core.aggregator.parsers.parser import Parser
 
 
 logger: logging.Logger = logging.getLogger(__name__)

@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import logging
 
 import aiosqlite
@@ -8,11 +8,8 @@ import uvicorn
 from backend.api.app import app
 from backend.configs import log_config, app_config
 from backend.services.telegram_connection import TelegramConnection
-from backend.infra.db.database import create_database
-from backend.infra.db.feed_repo import FeedRepository
-from backend.infra.db.news_repo import NewsRepository
-from backend.infra.db.source_repo import SourceRepository
-from backend.infra.aggregator.parser_factory import ParserFactory
+from backend.db import create_database, FeedRepository, NewsRepository, SourceRepository
+from backend.core.aggregator.parser_factory import ParserFactory
 from backend.services.news_service import NewsService
 
 
@@ -20,8 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    init()
-
     db: aiosqlite.Connection = await create_database(app_config.DB_PATH)
     tg: TelegramConnection | None = _setup_telegram()
     http: httpx.AsyncClient = httpx.AsyncClient()
@@ -38,16 +33,12 @@ async def main() -> None:
         await db.close()
 
 
-def init() -> None:
-    log_config.setup()
-
-
 def _setup_telegram() -> TelegramConnection | None:
-    if not (app_config.TG_API_ID and app_config.TG_API_HASH):
+    if not (app_config.TG_BACKEND_API_ID and app_config.TG_BACKEND_API_HASH):
         logger.warning("Telegram credentials not set, TG sources will be unavailable")
         return None
 
-    tg = TelegramConnection(str(app_config.TG_SESSION_PATH), app_config.TG_API_ID, app_config.TG_API_HASH)
+    tg = TelegramConnection(str(app_config.TG_BACKEND_SESSION_PATH), app_config.TG_BACKEND_API_ID, app_config.TG_BACKEND_API_HASH)
     tg.start()
     return tg
 

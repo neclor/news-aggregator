@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/backend /app/src/backend
 
-RUN mkdir -p /app/data /app/configs
+RUN mkdir -p /data
 
 ENV PYTHONPATH=/app/src:$PYTHONPATH
 

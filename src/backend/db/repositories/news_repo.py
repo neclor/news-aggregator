@@ -3,8 +3,7 @@ from uuid import UUID
 
 import aiosqlite
 
-from backend.models.feed_stats import DayCount, FeedStats, SourceCount
-from backend.models.news_item import NewsItem
+from backend.models import DayCount, FeedStats, SourceCount, NewsItem
 
 
 class NewsRepository:

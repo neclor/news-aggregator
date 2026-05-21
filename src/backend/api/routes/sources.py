@@ -4,8 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from backend.api.deps import NewsServiceDep
 from backend.api.schemas import SourceIn, SourceOut
-from backend.models.site_selectors import SiteSelectors
-from backend.models.source_config import SourceConfig
+from backend.models import SiteSelectors, SourceConfig
 from backend.utils.url_utils import normalize_url
 
 

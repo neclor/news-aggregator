@@ -1,18 +1,12 @@
-import logging
+﻿import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
-from backend.infra.aggregator import aggregator
-from backend.infra.aggregator.parser_factory import ParserFactory
-from backend.models.source_config import SourceConfig
-from backend.models.feed import Feed
-from backend.models.news_item import NewsItem
-from backend.infra.db.feed_repo import FeedRepository
-from backend.infra.db.news_repo import NewsRepository
-from backend.models.feed_stats import FeedStats
-from backend.infra.db.source_repo import SourceRepository
-from backend.infra.aggregator.parsers.parser import Parser
-from backend.models.parser_type import ParserType
+from backend.core.aggregator import aggregator
+from backend.core.aggregator.parser_factory import ParserFactory
+from backend.core.aggregator.parsers import Parser
+from backend.db import FeedRepository, NewsRepository, SourceRepository
+from backend.models import Feed, FeedStats, NewsItem, ParserType, SourceConfig
 from backend.services.telegram_connection import TelegramConnection
 
 

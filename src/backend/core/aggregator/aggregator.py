@@ -1,9 +1,9 @@
-import asyncio
+﻿import asyncio
 import logging
 from collections.abc import AsyncGenerator, Iterable
 
-from backend.models.news_item import NewsItem
-from backend.infra.aggregator.parsers.parser import Parser
+from backend.models import NewsItem
+from backend.core.aggregator.parsers import Parser
 
 
 logger: logging.Logger = logging.getLogger(__name__)

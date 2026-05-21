@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 
 from backend.api.deps import NewsServiceDep
 from backend.api.schemas import FeedIn, FeedOut
-from backend.models.feed import Feed
+from backend.models import Feed
 
 
 router = APIRouter(prefix="/feeds", tags=["feeds"])
