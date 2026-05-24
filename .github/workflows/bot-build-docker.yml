@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths: [src/bot/**]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
