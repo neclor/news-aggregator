@@ -6,12 +6,13 @@ services:
     container_name: news-aggregator-backend
     env_file: .env
     environment:
-      DB_PATH: /data/news.db
-      TG_BACKEND_SESSION_PATH: /data/backend_session
+      DB_PATH: /app/data/news.db
+      TG_BACKEND_SESSION_PATH: /app/sessions/backend_session
     ports:
       - "${SERVER_PORT:-8080}:8000"
     volumes:
-      - ${HOST_DATA_DIR:-./data}:/data
+      - news-aggregator-data:/app/data
+      - ${HOST_SESSIONS_DIR:-./sessions}:/app/sessions
     restart: unless-stopped
     networks:
       - news-aggregator-network
@@ -34,10 +35,11 @@ services:
     env_file: .env
     environment:
       BACKEND_URL: http://backend:8000
-      TG_BOT_SESSION_PATH: /data/bot_session
-      BOT_DATA_PATH: /data/bot_data.json
+      TG_BOT_SESSION_PATH: /app/sessions/bot_session
+      BOT_DATA_PATH: /app/data/bot_data.json
     volumes:
-      - ${HOST_DATA_DIR:-./data}:/data
+      - news-aggregator-data:/app/data
+      - ${HOST_SESSIONS_DIR:-./sessions}:/app/sessions
     depends_on:
       backend:
         condition: service_healthy
@@ -56,6 +58,9 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  news-aggregator-data:
 
 networks:
   news-aggregator-network:
