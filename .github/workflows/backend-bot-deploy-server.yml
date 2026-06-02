@@ -6,6 +6,10 @@ on:
     types: [completed]
     branches: [main]
 
+concurrency:
+  group: backend-bot-deploy-server
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

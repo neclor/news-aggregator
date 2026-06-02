@@ -40,9 +40,6 @@ services:
     volumes:
       - news-aggregator-data:/app/data
       - ${HOST_SESSIONS_DIR:-./sessions}:/app/sessions
-    depends_on:
-      backend:
-        condition: service_healthy
     restart: unless-stopped
     networks:
       - news-aggregator-network

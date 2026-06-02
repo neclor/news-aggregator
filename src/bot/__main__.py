@@ -38,7 +38,7 @@ async def main() -> None:
 
 def _build_client() -> TelegramClient:
     return TelegramClient(
-        str(bot_config.TG_BOT_SESSION_PATH),
+        bot_config.TG_BOT_SESSION_PATH,
         bot_config.TG_BOT_API_ID,
         bot_config.TG_BOT_API_HASH,
         connection_retries=-1,
