@@ -1,15 +1,21 @@
 name: Deploy UI (Server)
 
 on:
-  workflow_run:
-    workflows: [Build Site]
-    types: [completed]
-    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to deploy
+        required: true
+
+concurrency:
+  group: site-deploy-server
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Deploy to server
@@ -20,6 +26,7 @@ jobs:
           KEY: ${{ secrets.SSH_KEY }}
 
           WEB_DIR: ${{ vars.WEB_DIR }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
         run: |
           echo "$KEY" > ssh_key
@@ -29,7 +36,7 @@ jobs:
             -p $PORT \
             -o StrictHostKeyChecking=no \
             $USER@$HOST \
-            "curl -fsSL https://github.com/${{ github.repository }}/releases/download/latest/news-aggregator-site.zip \
+            "curl -fsSL https://github.com/${{ github.repository }}/releases/download/$TAG/news-aggregator-site.zip \
               -o /tmp/news-aggregator-site.zip \
               && mkdir -p $WEB_DIR \
               && unzip -o /tmp/news-aggregator-site.zip -d $WEB_DIR \

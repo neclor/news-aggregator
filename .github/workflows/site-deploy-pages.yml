@@ -1,17 +1,23 @@
 name: Deploy UI (GitHub Pages)
 
 on:
-  workflow_run:
-    workflows: [Build Site]
-    types: [completed]
-    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to deploy
+        required: true
+
+concurrency:
+  group: site-deploy-pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
-      actions: read
+      contents: read
       pages: write
       id-token: write
     environment:
@@ -19,13 +25,18 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: news-aggregator-site
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: dist
+      - name: Download site build from release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern news-aggregator-site.zip \
+            --dir .
+          mkdir -p dist
+          unzip -o news-aggregator-site.zip -d dist
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3

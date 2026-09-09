@@ -1,19 +1,17 @@
 name: Deploy backend, bot
 
 on:
-  workflow_run:
-    workflows: [Build backend docker, Build bot docker]
-    types: [completed]
-    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
 
 concurrency:
   group: backend-bot-deploy-server
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Deploy to server

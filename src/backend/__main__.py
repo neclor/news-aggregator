@@ -17,9 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    # Separate connections so the background fetch loop's writes don't serialize
-    # behind (or in front of) API requests on a single aiosqlite thread. WAL mode
-    # allows one writer plus concurrent readers across connections.
     api_db: aiosqlite.Connection = await create_database(app_config.DB_PATH)
     fetch_db: aiosqlite.Connection = await create_database(app_config.DB_PATH)
     tg: TelegramConnection | None = _setup_telegram()
