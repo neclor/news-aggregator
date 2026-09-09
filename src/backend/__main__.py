@@ -17,20 +17,26 @@ logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    db: aiosqlite.Connection = await create_database(app_config.DB_PATH)
+    # Separate connections so the background fetch loop's writes don't serialize
+    # behind (or in front of) API requests on a single aiosqlite thread. WAL mode
+    # allows one writer plus concurrent readers across connections.
+    api_db: aiosqlite.Connection = await create_database(app_config.DB_PATH)
+    fetch_db: aiosqlite.Connection = await create_database(app_config.DB_PATH)
     tg: TelegramConnection | None = _setup_telegram()
     http: httpx.AsyncClient = httpx.AsyncClient()
     try:
-        service: NewsService = _build_service(http, db, tg)
-        app.state.service = service
+        app.state.service = _build_service(http, api_db, tg)
+        fetch_service: NewsService = _build_service(http, fetch_db, tg)
+        app.state.fetch_service = fetch_service
         server = uvicorn.Server(uvicorn.Config(app, host="0.0.0.0", port=8000))
 
-        await asyncio.gather(run(service), server.serve())
+        await asyncio.gather(run(fetch_service), server.serve())
 
     finally:
         await http.aclose()
         if tg: await tg.stop()
-        await db.close()
+        await api_db.close()
+        await fetch_db.close()
 
 
 def _setup_telegram() -> TelegramConnection | None:

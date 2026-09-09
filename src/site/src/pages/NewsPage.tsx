@@ -33,6 +33,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
   const [formError, setFormError] = useState<string | null>(null)
   const [showSettings, setShowSettings] = useState(false)
   const [statsKey, setStatsKey] = useState(0)
+  const [readAdjust, setReadAdjust] = useState(0)
   const [searchInput, setSearchInput] = useState('')
   const [q, setQ] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -53,6 +54,9 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     setSearchInput('')
     setQ('')
   }, [feed.id])
+
+  // Drop the local unread/read delta whenever StatsPanel does a full refetch
+  useEffect(() => { setReadAdjust(0) }, [feed.id, statsKey])
 
   // Debounce search input → q
   useEffect(() => {
@@ -80,7 +84,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     try {
       await api.news.markRead(feed.id, url)
       setRead(prev => new Set(prev).add(url))
-      setStatsKey(k => k + 1)
+      setReadAdjust(a => a + 1)
     } catch (e) {
       console.error(e)
     }
@@ -90,7 +94,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     try {
       await api.news.markUnread(feed.id, url)
       setRead(prev => { const s = new Set(prev); s.delete(url); return s })
-      setStatsKey(k => k + 1)
+      setReadAdjust(a => a - 1)
     } catch (e) {
       console.error(e)
     }
@@ -110,6 +114,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
     setFetching(true)
     try { await api.fetch() } catch (e) { console.error(e) } finally { setFetching(false) }
     await load()
+    setStatsKey(k => k + 1)
   }
 
   const handleEdit = async (data: FeedIn) => {
@@ -242,7 +247,7 @@ export default function NewsPage({ feed, onChanged, onDeleted }: Props) {
           </div>
 
         </div>
-        <StatsPanel feedId={feed.id} refreshKey={statsKey} />
+        <StatsPanel feedId={feed.id} refreshKey={statsKey} readAdjust={readAdjust} />
       </div>
 
       {editing && (

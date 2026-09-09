@@ -5,6 +5,7 @@ import type { FeedStats } from '../api/types'
 interface Props {
   feedId: string
   refreshKey: number
+  readAdjust: number
 }
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
@@ -17,7 +18,7 @@ function last7Days(): string[] {
   })
 }
 
-export default function StatsPanel({ feedId, refreshKey }: Props) {
+export default function StatsPanel({ feedId, refreshKey, readAdjust }: Props) {
   const [stats, setStats] = useState<FeedStats | null>(null)
 
   useEffect(() => {
@@ -25,6 +26,9 @@ export default function StatsPanel({ feedId, refreshKey }: Props) {
   }, [feedId, refreshKey])
 
   if (!stats || stats.total === 0) return null
+
+  const read = Math.min(stats.total, Math.max(0, stats.read + readAdjust))
+  const unread = stats.total - read
 
   const days = last7Days()
   const byDay = Object.fromEntries(stats.daily.map(d => [d.date, d.count]))
@@ -41,11 +45,11 @@ export default function StatsPanel({ feedId, refreshKey }: Props) {
         </div>
         <div className="stats-row">
           <span>Unread</span>
-          <span className="stats-val stats-accent">{stats.unread}</span>
+          <span className="stats-val stats-accent">{unread}</span>
         </div>
         <div className="stats-row">
           <span>Read</span>
-          <span className="stats-val">{stats.read}</span>
+          <span className="stats-val">{read}</span>
         </div>
       </div>
 
