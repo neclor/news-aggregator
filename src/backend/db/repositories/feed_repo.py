@@ -47,34 +47,6 @@ class FeedRepository:
         await self._db.commit()
 
 
-    async def link_sources(self, feed_id: UUID, sources: list[str]) -> None:
-        if not sources: return
-
-        placeholders = ",".join("?" * len(sources))
-        await self._db.execute(
-            f"""
-            INSERT OR IGNORE INTO feed_items (feed_id, news_url)
-            SELECT ?, url FROM news_items WHERE source IN ({placeholders})
-            """,
-            (str(feed_id), *sources),
-        )
-        await self._db.commit()
-
-
-    async def unlink_sources(self, feed_id: UUID, sources: list[str]) -> None:
-        if not sources:
-            return
-        placeholders = ",".join("?" * len(sources))
-        await self._db.execute(
-            f"""
-            DELETE FROM feed_items
-            WHERE feed_id = ?
-              AND news_url IN (SELECT url FROM news_items WHERE source IN ({placeholders}))
-            """,
-            (str(feed_id), *sources),
-        )
-        await self._db.commit()
-
     async def delete(self, feed_id: UUID) -> bool:
         async with self._db.execute(
             "DELETE FROM feeds WHERE id = ?", (str(feed_id),)

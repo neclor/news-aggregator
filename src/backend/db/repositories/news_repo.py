@@ -25,14 +25,6 @@ class NewsRepository:
         return inserted
 
 
-    async def link_to_feed(self, feed_id: UUID, news_url: str) -> None:
-        await self._db.execute(
-            "INSERT OR IGNORE INTO feed_items (feed_id, news_url) VALUES (?, ?)",
-            (str(feed_id), news_url),
-        )
-        await self._db.commit()
-
-
     async def get_by_feed(
             self,
             feed_id: UUID,
@@ -45,13 +37,13 @@ class NewsRepository:
             q: str | None = None
     ) -> list[NewsItem]:
         query = """
-            SELECT news_items.*, feed_items.is_read FROM news_items
-            JOIN feed_items ON feed_items.news_url = news_items.url
+            SELECT news_items.*, feed_items.is_read FROM feed_items
+            JOIN news_items ON news_items.url = feed_items.news_url
             WHERE feed_items.feed_id = ?
         """
         params: list = [str(feed_id)]
         if not_before is not None:
-            query += " AND news_items.published_at >= ?"
+            query += " AND feed_items.published_at >= ?"
             params.append(not_before.isoformat())
         if unread_only:
             query += " AND feed_items.is_read = 0"
@@ -70,7 +62,7 @@ class NewsRepository:
             if fts_q:
                 query += " AND news_items.url IN (SELECT url FROM news_fts WHERE news_fts MATCH ?)"
                 params.append(fts_q)
-        query += " ORDER BY news_items.published_at DESC LIMIT ?"
+        query += " ORDER BY feed_items.published_at DESC LIMIT ?"
         params.append(limit)
 
         async with self._db.execute(query, params) as cursor:
@@ -117,7 +109,7 @@ class NewsRepository:
 
     async def mark_read(self, feed_id: UUID, news_url: str) -> None:
         await self._db.execute(
-            "UPDATE feed_items SET is_read = 1 WHERE feed_id = ? AND news_url = ?",
+            "INSERT OR IGNORE INTO feed_reads (feed_id, news_url) VALUES (?, ?)",
             (str(feed_id), news_url),
         )
         await self._db.commit()
@@ -125,7 +117,10 @@ class NewsRepository:
 
     async def mark_all_read(self, feed_id: UUID) -> None:
         await self._db.execute(
-            "UPDATE feed_items SET is_read = 1 WHERE feed_id = ?",
+            """
+            INSERT OR IGNORE INTO feed_reads (feed_id, news_url)
+            SELECT feed_id, news_url FROM feed_items WHERE feed_id = ?
+            """,
             (str(feed_id),),
         )
         await self._db.commit()
@@ -133,7 +128,7 @@ class NewsRepository:
 
     async def mark_unread(self, feed_id: UUID, news_url: str) -> None:
         await self._db.execute(
-            "UPDATE feed_items SET is_read = 0 WHERE feed_id = ? AND news_url = ?",
+            "DELETE FROM feed_reads WHERE feed_id = ? AND news_url = ?",
             (str(feed_id), news_url),
         )
         await self._db.commit()
@@ -152,11 +147,10 @@ class NewsRepository:
 
         async with self._db.execute(
             """
-            SELECT news_items.source, COUNT(*) AS cnt
+            SELECT source, COUNT(*) AS cnt
             FROM feed_items
-            JOIN news_items ON news_items.url = feed_items.news_url
-            WHERE feed_items.feed_id = ?
-            GROUP BY news_items.source
+            WHERE feed_id = ?
+            GROUP BY source
             ORDER BY cnt DESC
             LIMIT 10
             """,
@@ -166,11 +160,10 @@ class NewsRepository:
 
         async with self._db.execute(
             """
-            SELECT DATE(news_items.published_at) AS day, COUNT(*) AS cnt
+            SELECT DATE(published_at) AS day, COUNT(*) AS cnt
             FROM feed_items
-            JOIN news_items ON news_items.url = feed_items.news_url
-            WHERE feed_items.feed_id = ?
-              AND news_items.published_at >= DATE('now', '-6 days')
+            WHERE feed_id = ?
+              AND published_at >= DATE('now', '-6 days')
             GROUP BY day
             ORDER BY day
             """,

@@ -31,26 +31,18 @@ class NewsService:
 
 
     async def add_feed(self, feed: Feed) -> None:
-        await self._auto_register_sources(feed.sources)
-        await self._feed_repo.save(feed)
-        await self._feed_repo.link_sources(feed.id, feed.sources)
+        await self._persist_feed(feed)
         logger.info("Feed created: %s ('%s')", feed.id, feed.name)
 
 
     async def update_feed(self, feed: Feed) -> None:
-        existing = await self._feed_repo.get(feed.id)
-        if existing is None:
-            await self.add_feed(feed)
-            return
+        await self._persist_feed(feed)
+        logger.info("Feed updated: %s ('%s')", feed.id, feed.name)
 
+
+    async def _persist_feed(self, feed: Feed) -> None:
         await self._auto_register_sources(feed.sources)
         await self._feed_repo.save(feed)
-
-        removed = sorted(set(existing.sources) - set(feed.sources))
-        added = sorted(set(feed.sources) - set(existing.sources))
-        await self._feed_repo.unlink_sources(feed.id, removed)
-        await self._feed_repo.link_sources(feed.id, added)
-        logger.info("Feed updated: %s ('%s'); sources +%d -%d", feed.id, feed.name, len(added), len(removed))
 
 
     async def _auto_register_sources(self, urls: list[str]) -> None:
@@ -149,11 +141,6 @@ class NewsService:
 
         if not parsers: return
 
-        async for parser, items in aggregator.fetch(parsers):
-            relevant_feeds: list[Feed] = [feed for feed in feeds if parser.url in feed.sources]
+        async for _, items in aggregator.fetch(parsers):
             for item in items:
-                is_new: bool = await self._news_repo.save(item)
-                if not is_new: continue
-
-                for feed in relevant_feeds:
-                    await self._news_repo.link_to_feed(feed.id, item.url)
+                await self._news_repo.save(item)
