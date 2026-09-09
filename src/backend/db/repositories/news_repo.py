@@ -79,6 +79,30 @@ class NewsRepository:
         return [_row_to_item(r) for r in rows]
 
 
+    async def delete_older_than(self, cutoff: datetime, *, batch_size: int = 5000) -> int:
+        cutoff_iso = cutoff.isoformat()
+        total = 0
+        while True:
+            async with self._db.execute(
+                """
+                DELETE FROM news_items
+                WHERE url IN (
+                    SELECT url FROM news_items
+                    WHERE published_at < ?
+                    ORDER BY published_at
+                    LIMIT ?
+                )
+                """,
+                (cutoff_iso, batch_size),
+            ) as cursor:
+                deleted = cursor.rowcount
+            await self._db.commit()
+            total += deleted
+            if deleted < batch_size:
+                break
+        return total
+
+
     async def get_by_sources(self, sources: list[str]) -> list[NewsItem]:
         if not sources:
             return []

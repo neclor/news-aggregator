@@ -1,7 +1,8 @@
 ﻿import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
+from backend.configs import app_config
 from backend.core.aggregator import aggregator
 from backend.core.aggregator.parser_factory import ParserFactory
 from backend.core.aggregator.parsers import Parser
@@ -109,6 +110,16 @@ class NewsService:
         return await self._news_repo.get_by_feed(
             feed_id, keywords=keywords, blacklist=blacklist, not_before=not_before, unread_only=unread_only, limit=limit, q=q
         )
+
+
+    async def prune_old_news(self) -> int:
+        if app_config.RETENTION_DAYS <= 0:
+            return 0
+        cutoff = datetime.now(timezone.utc) - timedelta(days=app_config.RETENTION_DAYS)
+        removed = await self._news_repo.delete_older_than(cutoff)
+        if removed:
+            logger.info("Pruned %d news items older than %d days", removed, app_config.RETENTION_DAYS)
+        return removed
 
 
     async def fetch_all(self) -> None:

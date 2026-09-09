@@ -9,6 +9,7 @@ load_dotenv()
 
 DB_PATH: Path = Path(os.getenv("DB_PATH", "data/news.db"))
 FETCH_INTERVAL_SEC: int = int(os.getenv("FETCH_INTERVAL_SEC", "600"))
+RETENTION_DAYS: int = int(os.getenv("RETENTION_DAYS", "60"))
 
 TG_BACKEND_API_ID: int = int(os.getenv("TG_BACKEND_API_ID", "0"))
 TG_BACKEND_API_HASH: str = os.getenv("TG_BACKEND_API_HASH", "")

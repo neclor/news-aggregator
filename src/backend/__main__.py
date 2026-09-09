@@ -60,6 +60,7 @@ async def run(service: NewsService) -> None:
 
         try:
             await service.fetch_all()
+            await service.prune_old_news()
         except Exception:
             logger.exception("Fetch cycle failed, retrying in %ds", app_config.FETCH_INTERVAL_SEC)
         else:
