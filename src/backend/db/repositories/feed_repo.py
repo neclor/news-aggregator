@@ -47,20 +47,31 @@ class FeedRepository:
         await self._db.commit()
 
 
-    async def set_news_items(self, feed_id: UUID, news_urls: set[str]) -> None:
-        fid = str(feed_id)
-        if not news_urls:
-            await self._db.execute("DELETE FROM feed_items WHERE feed_id = ?", (fid,))
-            await self._db.commit()
-            return
-        placeholders = ",".join("?" * len(news_urls))
+    async def link_sources(self, feed_id: UUID, sources: list[str]) -> None:
+        if not sources: return
+
+        placeholders = ",".join("?" * len(sources))
         await self._db.execute(
-            f"DELETE FROM feed_items WHERE feed_id = ? AND news_url NOT IN ({placeholders})",
-            [fid, *news_urls],
+            f"""
+            INSERT OR IGNORE INTO feed_items (feed_id, news_url)
+            SELECT ?, url FROM news_items WHERE source IN ({placeholders})
+            """,
+            (str(feed_id), *sources),
         )
-        await self._db.executemany(
-            "INSERT OR IGNORE INTO feed_items (feed_id, news_url) VALUES (?, ?)",
-            [(fid, url) for url in news_urls],
+        await self._db.commit()
+
+
+    async def unlink_sources(self, feed_id: UUID, sources: list[str]) -> None:
+        if not sources:
+            return
+        placeholders = ",".join("?" * len(sources))
+        await self._db.execute(
+            f"""
+            DELETE FROM feed_items
+            WHERE feed_id = ?
+              AND news_url IN (SELECT url FROM news_items WHERE source IN ({placeholders}))
+            """,
+            (str(feed_id), *sources),
         )
         await self._db.commit()
 

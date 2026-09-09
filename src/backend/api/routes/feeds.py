@@ -47,7 +47,7 @@ async def update_feed(feed_id: UUID, body: FeedIn, service: NewsServiceDep) -> F
         blacklist=body.blacklist,
         max_age=timedelta(hours=body.max_age_hours) if body.max_age_hours else None,
     )
-    await service.add_feed(feed)
+    await service.update_feed(feed)
     return _to_out(feed)
 
 

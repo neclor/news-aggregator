@@ -33,8 +33,24 @@ class NewsService:
     async def add_feed(self, feed: Feed) -> None:
         await self._auto_register_sources(feed.sources)
         await self._feed_repo.save(feed)
-        await self._relink_feed(feed)
-        logger.info("Feed saved: %s ('%s')", feed.id, feed.name)
+        await self._feed_repo.link_sources(feed.id, feed.sources)
+        logger.info("Feed created: %s ('%s')", feed.id, feed.name)
+
+
+    async def update_feed(self, feed: Feed) -> None:
+        existing = await self._feed_repo.get(feed.id)
+        if existing is None:
+            await self.add_feed(feed)
+            return
+
+        await self._auto_register_sources(feed.sources)
+        await self._feed_repo.save(feed)
+
+        removed = sorted(set(existing.sources) - set(feed.sources))
+        added = sorted(set(feed.sources) - set(existing.sources))
+        await self._feed_repo.unlink_sources(feed.id, removed)
+        await self._feed_repo.link_sources(feed.id, added)
+        logger.info("Feed updated: %s ('%s'); sources +%d -%d", feed.id, feed.name, len(added), len(removed))
 
 
     async def _auto_register_sources(self, urls: list[str]) -> None:
@@ -44,11 +60,6 @@ class NewsService:
             inferred: ParserType = "telegram" if (url.startswith("@") or "t.me/" in url) else "rss"
             await self.add_source(SourceConfig(url=url, type=inferred))
             logger.info("Auto-registered source: %s (%s)", url, inferred)
-
-
-    async def _relink_feed(self, feed: Feed) -> None:
-        items = await self._news_repo.get_by_sources(feed.sources)
-        await self._feed_repo.set_news_items(feed.id, {item.url for item in items})
 
 
     async def remove_feed(self, feed_id: UUID) -> bool:
