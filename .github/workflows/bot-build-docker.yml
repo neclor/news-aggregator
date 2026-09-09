@@ -8,6 +8,9 @@ on:
     paths: [src/bot/**, .github/workflows/bot-build-docker.yml]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -16,6 +16,8 @@ concurrency:
 env:
   REGISTRY: ghcr.io
 
+permissions: {}
+
 jobs:
   images:
     name: Build and push ${{ matrix.name }} image

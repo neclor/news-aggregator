@@ -13,6 +13,8 @@ concurrency:
   group: site-deploy-pages
   cancel-in-progress: false
 
+permissions: {}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
