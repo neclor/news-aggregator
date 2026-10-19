@@ -19,8 +19,20 @@ env:
 permissions: {}
 
 jobs:
+  validate:
+    name: Validate tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check tag format
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+            || { echo "::error::'$TAG' is not a X.Y.Z tag"; exit 1; }
+
   images:
     name: Build and push ${{ matrix.name }} image
+    needs: validate
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -71,6 +83,7 @@ jobs:
 
   site:
     name: Build site and stage release
+    needs: validate
     runs-on: ubuntu-latest
     permissions:
       contents: write
