@@ -4,10 +4,6 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Release tag to deploy
-        required: true
 
 concurrency:
   group: site-deploy-server
@@ -28,7 +24,6 @@ jobs:
           KEY: ${{ secrets.SSH_KEY }}
 
           WEB_DIR: ${{ vars.WEB_DIR }}
-          TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
         run: |
           echo "$KEY" > ssh_key
@@ -38,7 +33,7 @@ jobs:
             -p $PORT \
             -o StrictHostKeyChecking=no \
             $USER@$HOST \
-            "curl -fsSL https://github.com/${{ github.repository }}/releases/download/$TAG/news-aggregator-site.zip \
+            "curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/news-aggregator-site.zip \
               -o /tmp/news-aggregator-site.zip \
               && mkdir -p $WEB_DIR \
               && unzip -o /tmp/news-aggregator-site.zip -d $WEB_DIR \
